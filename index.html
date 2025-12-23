@@ -110,21 +110,15 @@
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
         .animate-selection { animation: slideUpCenter 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
-
         .selection-count { font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 4px; white-space: nowrap; }
-        
-        #selection-bar button { 
-            font-size: 8px !important; 
-            padding: 4px 10px !important; 
-            font-weight: 700; 
-            letter-spacing: 0.03em; 
-        }
+        #selection-bar button { font-size: 8px !important; padding: 4px 10px !important; font-weight: 700; letter-spacing: 0.03em; }
 
         .thumb-grid { display: flex; gap: 8px; margin-top: 12px; }
         .thumb-box { width: 50px; height: 50px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-light); cursor: pointer; transition: 0.3s; }
         .thumb-box.active { border-color: var(--accent-black); border-width: 1.5px; }
 
-        .admin-input { width: 100%; padding: 1.1rem; background: #f9f9f9; border: 1px solid transparent; border-radius: 12px; font-size: 14px; transition: 0.3s; }
+        /* Admin UI Fixes */
+        .admin-input { width: 100%; padding: 0.9rem 1.1rem; background: #f9f9f9; border: 1px solid transparent; border-radius: 12px; font-size: 14px; transition: 0.3s; }
         .admin-input:focus { background: #fff; border-color: var(--accent-black); outline: none; }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -143,6 +137,26 @@
             align-items: center;
             gap: 6px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        /* NEW ADMIN LIST STYLING */
+        #admin-product-list-container {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        #admin-product-list-container::-webkit-scrollbar { width: 4px; }
+        #admin-product-list-container::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+
+        .admin-list-category-header {
+            background: #fdfdfd;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
     </style>
 </head>
@@ -204,19 +218,20 @@
         <div class="max-w-6xl mx-auto px-8 py-20">
             <div class="flex justify-between items-center mb-16">
                 <div><h2 class="text-3xl font-black tracking-tight uppercase">Workspace</h2><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Cloud Inventory Manager</p></div>
-                <button onclick="hideAdminPanel()" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-black">✕</button>
+                <button onclick="hideAdminPanel()" class="w-12 h-12 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-black transition-all">✕</button>
             </div>
             
             <div class="flex p-1 bg-gray-50 rounded-2xl mb-12 max-w-sm border border-gray-100 shadow-inner">
                 <button onclick="switchAdminTab('products')" id="tab-p" class="flex-1 py-4 rounded-xl text-[10px] font-bold uppercase transition-all bg-white shadow-xl">Products</button>
-                <button onclick="switchAdminTab('categories')" id="tab-c" class="flex-1 py-4 rounded-xl text-[10px] font-bold uppercase text-gray-400">Categories</button>
+                <button onclick="switchAdminTab('categories')" id="tab-c" class="flex-1 py-4 rounded-xl text-[10px] font-bold uppercase transition-all text-gray-400">Categories</button>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
                 <div class="lg:col-span-5">
+                    <!-- Product Section -->
                     <div id="admin-product-section" class="fade-in">
                         <div class="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 space-y-4 shadow-sm">
-                            <h3 class="text-[11px] font-black uppercase tracking-widest">Product Details</h3>
+                            <h3 id="p-form-title" class="text-[11px] font-black uppercase tracking-widest">Product Details</h3>
                             <input type="hidden" id="edit-id">
                             <input type="text" id="p-name" class="admin-input" placeholder="Item Name">
                             <input type="text" id="p-price" class="admin-input" placeholder="Price (AED 50)">
@@ -235,18 +250,34 @@
                             <button onclick="saveProduct()" id="p-save-btn" class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-widest shadow-2 mt-4">Sync Product</button>
                         </div>
                     </div>
+                    <!-- Category Section -->
                     <div id="admin-category-section" class="hidden fade-in">
                         <div class="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 space-y-4 shadow-sm">
-                            <h3 class="text-[11px] font-black uppercase tracking-widest">New Category</h3>
+                            <h3 id="c-form-title" class="text-[11px] font-black uppercase tracking-widest">New Category</h3>
+                            <input type="hidden" id="edit-cat-id">
                             <input type="text" id="c-name" class="admin-input" placeholder="Category Title">
                             <input type="text" id="c-img" class="admin-input" value="img/" placeholder="Icon Path">
-                            <button onclick="saveCategory()" class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-widest shadow-2 mt-4">Sync Category</button>
+                            <button onclick="saveCategory()" id="c-save-btn" class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-widest shadow-2 mt-4">Sync Category</button>
                         </div>
                     </div>
                 </div>
                 <div class="lg:col-span-7">
-                    <h4 id="list-title" class="text-[11px] font-bold uppercase tracking-widest text-gray-300 mb-8 italic">Live Inventory</h4>
-                    <div id="admin-product-list" class="space-y-4 fade-in"></div>
+                    <div id="admin-list-controls" class="mb-6 space-y-4">
+                        <h4 id="list-title" class="text-[11px] font-bold uppercase tracking-widest text-gray-300 italic">Live Inventory</h4>
+                        <div id="product-admin-filters" class="flex flex-col md:flex-row gap-3">
+                            <div class="flex-1 relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i>
+                                <input type="text" id="admin-search" oninput="renderAdminUI()" class="admin-input pl-10 py-3 !bg-gray-50 border border-gray-100" placeholder="Search product name...">
+                            </div>
+                            <select id="admin-cat-filter" onchange="renderAdminUI()" class="admin-input py-3 !bg-gray-50 border border-gray-100 md:w-48 text-xs font-bold uppercase">
+                                <option value="all">All Categories</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="admin-product-list-container">
+                        <div id="admin-product-list" class="space-y-4 fade-in"></div>
+                    </div>
                     <div id="admin-category-list" class="hidden space-y-4 fade-in"></div>
                 </div>
             </div>
@@ -293,11 +324,9 @@
 
         async function refreshData() {
             try {
-                if (DATA.p.length === 0) {
-                    const [pSnap, cSnap] = await Promise.all([getDocs(prodCol), getDocs(catCol)]);
-                    DATA.p = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    DATA.c = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                }
+                const [pSnap, cSnap] = await Promise.all([getDocs(prodCol), getDocs(catCol)]);
+                DATA.p = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                DATA.c = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
                 const urlParams = new URLSearchParams(window.location.search);
                 const shareId = urlParams.get('s');
@@ -324,6 +353,7 @@
                 }
                 
                 populateCatSelect();
+                populateAdminCatFilter();
                 renderAdminUI();
                 
                 const loader = document.getElementById('loader');
@@ -331,25 +361,17 @@
             } catch (err) { console.error(err); showToast("Sync Error"); }
         }
 
-        // --- NAVIGATION SAFETY (FIXED SecurityError) ---
         const safePushState = (params) => {
             try {
                 const url = new URL(window.location.href);
-                // First remove existing params we control
                 url.searchParams.delete('p');
-                // Only delete selectionId if params specifies null
                 if (params.s === null) url.searchParams.delete('s');
-                
-                // Add new params
                 Object.keys(params).forEach(key => {
                     if (params[key] !== null) url.searchParams.set(key, params[key]);
                 });
-
-                // Use relative path for pushState to avoid origin errors with blob URLs
                 window.history.pushState({}, '', url.search);
             } catch (e) {
-                // Silently skip if pushState is blocked in sandbox (app continues to function)
-                console.warn("Navigation state restricted by browser sandbox.");
+                console.warn("Navigation state restricted.");
             }
         };
 
@@ -362,7 +384,7 @@
                 if (btn) { btn.classList.remove('hidden'); showToast("Dashboard Unlocked"); }
                 clicks = 0;
             }
-            goBackToHome();
+            goBackToHome(false);
         };
 
         window.goBackToHome = (forceReset = false) => {
@@ -373,6 +395,7 @@
             } else {
                 safePushState({ p: null });
             }
+            window.scrollTo({top: 0});
             renderHome();
         };
 
@@ -404,15 +427,12 @@
                 grid.innerHTML = filtered.map(p => `<div class="product-card group fade-in ${state.selected.includes(p.id) ? 'selected' : ''}" onclick="viewDetail('${p.id}')">${!state.selectionId ? `<div class="select-btn shadow-sm" onclick="toggleSelect(event, '${p.id}')"><i class="fa-solid fa-check text-[10px]"></i></div>` : ''}<div class="img-container mb-4 shadow-sm"><img src="${p.img}" loading="lazy"></div><div class="px-1 text-left"><h3 class="capitalize truncate leading-none text-gray-900 font-semibold">${p.name}</h3><p class="price-tag mt-2 font-bold">${p.price} AED</p></div></div>`).join('') || `<p class="col-span-full text-center py-40 text-gray-300 italic text-[11px]">No items found.</p>`;
             }
             updateSelectionBar();
-            window.scrollTo({top: 0});
         }
 
         window.viewDetail = (id) => {
             const p = DATA.p.find(x => x.id === id);
             if (!p) return;
-            
             safePushState({ p: id });
-
             const appMain = document.getElementById('app');
             appMain.innerHTML = `
                 <div class="max-w-5xl mx-auto py-8 md:py-16 fade-in px-4 pb-48 detail-view-container text-left">
@@ -455,6 +475,7 @@
             window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
+        // --- PRODUCT CRUD ---
         window.saveProduct = async () => {
             const id = document.getElementById('edit-id').value;
             const btn = document.getElementById('p-save-btn');
@@ -466,15 +487,17 @@
         };
 
         window.saveCategory = async () => {
-            const name = document.getElementById('c-name').value;
-            const img = document.getElementById('c-img').value;
-            if (!name) return showToast("Name required");
-            try { await addDoc(catCol, { name, img }); showToast("Category Added"); document.getElementById('c-name').value = ""; DATA.p = []; refreshData(); } 
-            catch (e) { showToast("Category Error"); }
+            const id = document.getElementById('edit-cat-id').value;
+            const btn = document.getElementById('c-save-btn');
+            const data = { name: document.getElementById('c-name').value, img: document.getElementById('c-img').value };
+            if (!data.name) return showToast("Name required");
+            btn.disabled = true; btn.innerText = "Syncing...";
+            try { if (id) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'categories', id), data); else await addDoc(catCol, data); showToast("Category Synced"); resetForm(); DATA.p = []; refreshData(); } 
+            catch (e) { showToast("Category Error"); } finally { btn.disabled = false; btn.innerText = "Sync Category"; }
         };
 
-        window.deleteProduct = async (id) => { if (!confirm("Are you sure?")) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id)); showToast("Deleted"); DATA.p = DATA.p.filter(x => x.id !== id); renderAdminUI(); renderHome(); } catch (e) { showToast("Delete Error"); } };
-        window.deleteCategory = async (id) => { if (!confirm("Delete Category?")) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'categories', id)); showToast("Category Removed"); DATA.p = []; refreshData(); } catch (e) { showToast("Error"); } };
+        window.deleteProduct = async (id) => { if (!confirm("Are you sure?")) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id)); showToast("Deleted"); refreshData(); } catch (e) { showToast("Delete Error"); } };
+        window.deleteCategory = async (id) => { if (!confirm("Delete Category?")) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'categories', id)); showToast("Category Removed"); refreshData(); } catch (e) { showToast("Error"); } };
 
         window.editProduct = (id) => {
             const item = DATA.p.find(x => x.id === id);
@@ -488,7 +511,20 @@
             document.getElementById('p-img2').value = item.img2 || "img/";
             document.getElementById('p-cat-id').value = item.catId;
             document.getElementById('p-desc').value = item.desc;
+            document.getElementById('p-form-title').innerText = "Editing: " + item.name;
             switchAdminTab('products');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        };
+
+        window.editCategory = (id) => {
+            const item = DATA.c.find(x => x.id === id);
+            if(!item) return;
+            document.getElementById('edit-cat-id').value = item.id;
+            document.getElementById('c-name').value = item.name;
+            document.getElementById('c-img').value = item.img;
+            document.getElementById('c-form-title').innerText = "Editing: " + item.name;
+            switchAdminTab('categories');
+            window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
         window.toggleSelect = (e, id) => { e.stopPropagation(); if (state.selected.includes(id)) state.selected = state.selected.filter(x => x !== id); else state.selected.push(id); renderHome(); };
@@ -530,11 +566,37 @@
             const pList = document.getElementById('admin-product-list');
             const cList = document.getElementById('admin-category-list');
             if (!pList || !cList) return;
-            pList.innerHTML = DATA.p.map(p => `<div class="flex items-center gap-5 p-5 bg-gray-50 rounded-[2rem] border border-gray-100 group"><img src="${p.img}" class="w-16 h-16 rounded-xl object-cover shadow-sm border-2 border-white"><div class="flex-1"><h4 class="font-bold text-[13px] capitalize">${p.name}</h4><p class="text-[10px] text-gray-400 font-bold">${p.price} AED</p></div><div class="flex gap-2"><button onclick="editProduct('${p.id}')" class="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[10px]"></i></button><button onclick="deleteProduct('${p.id}')" class="w-10 h-10 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[10px]"></i></button></div></div>`).join('') || `<p class="text-center py-20 text-[11px] text-gray-300 italic">Inventory Empty</p>`;
-            cList.innerHTML = DATA.c.map(c => `<div class="flex items-center gap-5 p-5 bg-gray-50 rounded-[2rem] border border-gray-100"><img src="${c.img}" class="w-14 h-14 rounded-full object-cover border-4 border-white shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Icon'"><div class="flex-1 font-bold text-[13px] uppercase">${c.name}</div><button onclick="deleteCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[10px]"></i></button></div>`).join('') || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No Categories</p>`;
+
+            const searchQuery = document.getElementById('admin-search')?.value.toLowerCase() || "";
+            const catFilter = document.getElementById('admin-cat-filter')?.value || "all";
+
+            // Products Logic
+            let products = DATA.p;
+            if (searchQuery) products = products.filter(p => p.name.toLowerCase().includes(searchQuery));
+            if (catFilter !== 'all') products = products.filter(p => p.catId === catFilter);
+
+            // Group by Category
+            const grouped = {};
+            products.forEach(p => {
+                const catName = DATA.c.find(c => c.id === p.catId)?.name || "Uncategorized";
+                if (!grouped[catName]) grouped[catName] = [];
+                grouped[catName].push(p);
+            });
+
+            let pHtml = "";
+            Object.keys(grouped).sort().forEach(cat => {
+                pHtml += `<div class="admin-list-category-header"><h5 class="text-[10px] font-black uppercase tracking-widest text-gray-400">${cat} (${grouped[cat].length})</h5></div>`;
+                grouped[cat].forEach(p => {
+                    pHtml += `<div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group"><img src="${p.img}" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-white"><div class="flex-1"><h4 class="font-bold text-[12px] capitalize truncate">${p.name}</h4><p class="text-[9px] text-gray-400 font-bold">${p.price} AED</p></div><div class="flex gap-2"><button onclick="editProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-md text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[9px]"></i></button><button onclick="deleteProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[9px]"></i></button></div></div>`;
+                });
+            });
+
+            pList.innerHTML = pHtml || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No products found matching filters.</p>`;
+            
+            cList.innerHTML = DATA.c.map(c => `<div class="flex items-center gap-5 p-5 bg-gray-50 rounded-[2rem] border border-gray-100"><img src="${c.img}" class="w-14 h-14 rounded-full object-cover border-4 border-white shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Icon'"><div class="flex-1 font-bold text-[13px] uppercase">${c.name}</div><div class="flex gap-2"><button onclick="editCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[10px]"></i></button><button onclick="deleteCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[10px]"></i></button></div></div>`).join('') || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No Categories</p>`;
         }
 
-        window.applyFilter = (id) => { state.filter = id; renderHome(); };
+        window.applyFilter = (id) => { state.filter = id; window.scrollTo({top: 0}); renderHome(); };
         window.showAdminPanel = () => { document.getElementById('admin-panel').classList.remove('hidden'); document.body.style.overflow = 'hidden'; renderAdminUI(); };
         window.hideAdminPanel = () => { document.getElementById('admin-panel').classList.add('hidden'); document.body.style.overflow = 'auto'; };
         
@@ -542,8 +604,10 @@
             const isProd = tab === 'products';
             document.getElementById('admin-product-section').classList.toggle('hidden', !isProd);
             document.getElementById('admin-category-section').classList.toggle('hidden', isProd);
-            document.getElementById('admin-product-list').classList.toggle('hidden', !isProd);
+            document.getElementById('admin-product-list-container').classList.toggle('hidden', !isProd);
             document.getElementById('admin-category-list').classList.toggle('hidden', isProd);
+            document.getElementById('product-admin-filters').classList.toggle('hidden', !isProd);
+            
             document.getElementById('tab-p').className = isProd ? "flex-1 py-4 rounded-xl text-[10px] font-bold uppercase bg-white shadow-xl" : "flex-1 py-4 rounded-xl text-[10px] font-bold uppercase text-gray-400";
             document.getElementById('tab-c').className = !isProd ? "flex-1 py-4 rounded-xl text-[10px] font-bold uppercase bg-white shadow-xl" : "flex-1 py-4 rounded-xl text-[10px] font-bold uppercase text-gray-400";
             document.getElementById('list-title').innerText = isProd ? "Live Inventory" : "Existing Categories";
@@ -554,11 +618,20 @@
             if (select) select.innerHTML = `<option value="">Category Selection</option>` + DATA.c.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
         }
 
+        function populateAdminCatFilter() {
+            const select = document.getElementById('admin-cat-filter');
+            if (select) select.innerHTML = `<option value="all">All Categories</option>` + DATA.c.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
         window.resetForm = () => {
-            const fields = ['edit-id', 'p-name', 'p-price', 'p-size', 'p-material', 'p-desc'];
+            const fields = ['edit-id', 'edit-cat-id', 'p-name', 'p-price', 'p-size', 'p-material', 'p-desc', 'c-name'];
             fields.forEach(f => { const el = document.getElementById(f); if (el) el.value = ""; });
             document.getElementById('p-img').value = "img/"; document.getElementById('p-img2').value = "img/";
-            document.getElementById('p-save-btn').innerText = "Sync Product";
+            document.getElementById('c-img').value = "img/";
+            document.getElementById('p-form-title').innerText = "Product Details";
+            document.getElementById('c-form-title').innerText = "New Category";
+            document.getElementById('admin-search').value = "";
+            document.getElementById('admin-cat-filter').value = "all";
         };
 
         function showToast(msg) {
