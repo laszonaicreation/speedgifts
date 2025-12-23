@@ -13,45 +13,30 @@
     <style>
         /* ============================================================
            MAIN DESIGN CONFIGURATION (EDIT HERE)
-           Ivide maattangal varuthiyaal website mothamaayi maarum
            ============================================================
         */
         :root { 
-            /* GLOBAL COLORS (Website poornamaayi maaraan) */
+            /* GLOBAL COLORS */
             --website-bg: #ffffff;
             --text-main: #111111;
             --text-muted: #999999;
-            --accent-black: #000000;
+            --accent-black: #1a1a1a;
             --border-light: #f5f5f5;
 
-            /* ------------------------------------------------------------
-               DETAIL VIEW PAGE SETTINGS (Special for Product Detail)
-               Ivide maattangal varuthiyaal Detail Page mathram maarum
-               ------------------------------------------------------------
-            */
-            --detail-page-bg: #ffffff;      /* Detail view background nira */
-            
-            /* Name Settings in Detail View */
+            /* DETAIL VIEW PAGE SETTINGS */
+            --detail-page-bg: #ffffff;
             --detail-name-font: 'Inter', sans-serif; 
-            --detail-name-color: #111111;   /* Product name nira */
-            --detail-name-weight: 600;      /* Aksharaṅṅaḷude thickness */
-            --detail-name-size-mob: 1.75rem; /* Mobile name size */
-            --detail-name-size-desk: 3rem;   /* Desktop name size */
-
-            /* Price Settings in Detail View */
+            --detail-name-color: #111111;
+            --detail-name-weight: 600;
+            --detail-name-size-mob: 1.75rem;
+            --detail-name-size-desk: 3rem;
             --detail-price-font: 'Inter', sans-serif;
-            --detail-price-color: #111111;  /* Price nira */
-            --detail-price-size: 1.5rem;    /* Price size */
-
-            /* Labels (Item name:, Price:, Description:) */
-            --detail-label-color: #b0b0b0;  /* Standard grey for labels */
+            --detail-price-color: #111111;
+            --detail-price-size: 1.5rem;
+            --detail-label-color: #b0b0b0;
             --detail-label-font-size: 10px;
-
-            /* Description Text */
-            --detail-desc-color: #555555;   /* Description text nira */
-            --detail-desc-size: 14px;       /* Description text size */
-            
-            /* ------------------------------------------------------------ */
+            --detail-desc-color: #555555;
+            --detail-desc-size: 14px;
             
             --font-main: 'Inter', sans-serif; 
         }
@@ -67,45 +52,15 @@
             padding: 0;
         }
 
+        .serif-text { font-family: 'Playfair Display', serif; }
+
         /* DETAIL VIEW CSS CLASSES */
-        .detail-view-container { 
-            background-color: var(--detail-page-bg); 
-            text-align: left; 
-        }
-        
-        .detail-product-name { 
-            font-family: var(--detail-name-font); 
-            color: var(--detail-name-color); 
-            font-weight: var(--detail-name-weight); 
-            font-size: var(--detail-name-size-mob);
-            line-height: 1.2; 
-        }
-        @media (min-width: 768px) {
-            .detail-product-name { font-size: var(--detail-name-size-desk); }
-        }
-
-        .detail-price-text { 
-            font-family: var(--detail-price-font); 
-            color: var(--detail-price-color); 
-            font-size: var(--detail-price-size);
-            font-weight: 700; 
-        }
-
-        .detail-label { 
-            font-size: var(--detail-label-font-size); 
-            font-weight: 700; 
-            letter-spacing: 0.05em; 
-            color: var(--detail-label-color); 
-            margin-bottom: 4px; 
-            display: block; 
-            text-transform: uppercase; 
-        }
-
-        .detail-description-text { 
-            color: var(--detail-desc-color); 
-            font-size: var(--detail-desc-size); 
-            line-height: 1.6; 
-        }
+        .detail-view-container { background-color: var(--detail-page-bg); text-align: left; }
+        .detail-product-name { font-family: var(--detail-name-font); color: var(--detail-name-color); font-weight: var(--detail-name-weight); font-size: var(--detail-name-size-mob); line-height: 1.2; }
+        @media (min-width: 768px) { .detail-product-name { font-size: var(--detail-name-size-desk); } }
+        .detail-price-text { font-family: var(--detail-price-font); color: var(--detail-price-color); font-size: var(--detail-price-size); font-weight: 700; }
+        .detail-label { font-size: var(--detail-label-font-size); font-weight: 700; letter-spacing: 0.05em; color: var(--detail-label-color); margin-bottom: 4px; display: block; text-transform: uppercase; }
+        .detail-description-text { color: var(--detail-desc-color); font-size: var(--detail-desc-size); line-height: 1.6; }
 
         /* CUSTOMER VIEW - Home Card Styling */
         .product-card h3 { font-size: 13px; font-weight: 600; }
@@ -131,22 +86,22 @@
         /* SELECTION BAR - Compact Centered */
         #selection-bar {
             position: fixed;
-            bottom: 20px;
+            bottom: 15px; 
             left: 50%;
             transform: translateX(-50%);
             background: var(--accent-black);
             color: #fff;
-            padding: 8px 12px;
+            padding: 6px 12px; 
             border-radius: 100px;
             display: none; 
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px; 
             z-index: 1000;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             width: auto;
-            min-width: 220px;
-            max-width: 94vw;
+            min-width: 180px; 
+            max-width: 95vw;
             backdrop-filter: blur(15px);
         }
 
@@ -156,8 +111,14 @@
         }
         .animate-selection { animation: slideUpCenter 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
 
-        .selection-count { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 6px; white-space: nowrap; }
-        #selection-bar button { font-size: 8px; padding: 5px 12px; font-weight: 700; letter-spacing: 0.03em; }
+        .selection-count { font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; padding-left: 4px; white-space: nowrap; }
+        
+        #selection-bar button { 
+            font-size: 8px !important; 
+            padding: 4px 10px !important; 
+            font-weight: 700; 
+            letter-spacing: 0.03em; 
+        }
 
         .thumb-grid { display: flex; gap: 8px; margin-top: 12px; }
         .thumb-box { width: 50px; height: 50px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-light); cursor: pointer; transition: 0.3s; }
@@ -169,6 +130,20 @@
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeInUp 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
         #toast { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 10001; display: none; }
+
+        .spec-badge {
+            background: #fff;
+            border: 1px solid #eee;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
     </style>
 </head>
 <body class="selection:bg-black selection:text-white">
@@ -207,7 +182,7 @@
                     <h2 class="text-xl font-black tracking-tight uppercase">Picked for you</h2>
                     <p class="text-[12px] text-gray-400">Exclusive items curated for your boutique experience.</p>
                 </div>
-                <button onclick="goBackToHome()" class="text-[9px] font-bold uppercase tracking-widest px-6 py-3 bg-black text-white rounded-full shadow-lg self-start">View All Products</button>
+                <button onclick="goBackToHome(true)" class="text-[9px] font-bold uppercase tracking-widest px-6 py-3 bg-black text-white rounded-full shadow-lg self-start">View All Products</button>
             </div>
         </div>
         <div id="category-row" class="no-scrollbar flex gap-4 overflow-x-auto py-8 items-center border-b border-gray-50 mb-10 px-1"></div>
@@ -246,6 +221,12 @@
                             <input type="text" id="p-name" class="admin-input" placeholder="Item Name">
                             <input type="text" id="p-price" class="admin-input" placeholder="Price (AED 50)">
                             <select id="p-cat-id" class="admin-input cursor-pointer"></select>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="text" id="p-size" class="admin-input" placeholder="Size">
+                                <input type="text" id="p-material" class="admin-input" placeholder="Material">
+                            </div>
+
                             <div class="bg-white/60 p-4 rounded-xl border border-gray-100 space-y-4">
                                 <input type="text" id="p-img" class="w-full bg-transparent outline-none text-sm font-semibold" value="img/" placeholder="Image Path 1">
                                 <input type="text" id="p-img2" class="w-full bg-transparent outline-none text-sm font-semibold" value="img/" placeholder="Image Path 2">
@@ -259,7 +240,7 @@
                             <h3 class="text-[11px] font-black uppercase tracking-widest">New Category</h3>
                             <input type="text" id="c-name" class="admin-input" placeholder="Category Title">
                             <input type="text" id="c-img" class="admin-input" value="img/" placeholder="Icon Path">
-                            <button onclick="saveCategory()" class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-widest mt-4">Sync Category</button>
+                            <button onclick="saveCategory()" class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-widest shadow-2 mt-4">Sync Category</button>
                         </div>
                     </div>
                 </div>
@@ -312,7 +293,6 @@
 
         async function refreshData() {
             try {
-                // Always fetch if DATA is empty, otherwise skip unless forced
                 if (DATA.p.length === 0) {
                     const [pSnap, cSnap] = await Promise.all([getDocs(prodCol), getDocs(catCol)]);
                     DATA.p = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -323,7 +303,6 @@
                 const shareId = urlParams.get('s');
                 const prodId = urlParams.get('p');
 
-                // Check if admin is open to avoid jumping views
                 const isAdminOpen = !document.getElementById('admin-panel').classList.contains('hidden');
 
                 if (!isAdminOpen) {
@@ -340,20 +319,39 @@
                         renderHome();
                     }
                 } else {
-                    // Just refresh background if on home
                     const appArea = document.getElementById('app');
-                    if (appArea.querySelector('#product-grid')) {
-                        renderHome();
-                    }
+                    if (appArea.querySelector('#product-grid')) renderHome();
                 }
                 
                 populateCatSelect();
-                renderAdminUI(); // <--- SPOT UPDATE: Updates dashboard list immediately
+                renderAdminUI();
                 
                 const loader = document.getElementById('loader');
                 if (loader) loader.style.display = 'none';
             } catch (err) { console.error(err); showToast("Sync Error"); }
         }
+
+        // --- NAVIGATION SAFETY (FIXED SecurityError) ---
+        const safePushState = (params) => {
+            try {
+                const url = new URL(window.location.href);
+                // First remove existing params we control
+                url.searchParams.delete('p');
+                // Only delete selectionId if params specifies null
+                if (params.s === null) url.searchParams.delete('s');
+                
+                // Add new params
+                Object.keys(params).forEach(key => {
+                    if (params[key] !== null) url.searchParams.set(key, params[key]);
+                });
+
+                // Use relative path for pushState to avoid origin errors with blob URLs
+                window.history.pushState({}, '', url.search);
+            } catch (e) {
+                // Silently skip if pushState is blocked in sandbox (app continues to function)
+                console.warn("Navigation state restricted by browser sandbox.");
+            }
+        };
 
         window.handleLogoClick = () => {
             const now = Date.now();
@@ -367,10 +365,13 @@
             goBackToHome();
         };
 
-        window.goBackToHome = () => {
-            if (window.location.search) {
-                window.history.pushState({}, '', window.location.pathname);
+        window.goBackToHome = (forceReset = false) => {
+            if (forceReset) {
                 state.selectionId = null;
+                state.selected = [];
+                safePushState({ s: null, p: null });
+            } else {
+                safePushState({ p: null });
             }
             renderHome();
         };
@@ -400,7 +401,7 @@
                           (state.filter !== 'all' ? DATA.p.filter(p => p.catId === state.filter) : DATA.p);
 
             if (grid) {
-                grid.innerHTML = filtered.map(p => `<div class="product-card group fade-in ${state.selected.includes(p.id) ? 'selected' : ''}" onclick="viewDetail('${p.id}')">${!state.selectionId ? `<div class="select-btn shadow-sm" onclick="toggleSelect(event, '${p.id}')"><i class="fa-solid fa-check text-[10px]"></i></div>` : ''}<div class="img-container mb-4 shadow-sm"><img src="${p.img}" loading="lazy"></div><div class="px-1 text-left"><h3 class="capitalize truncate leading-none">${p.name}</h3><p class="price-tag mt-2">${p.price} AED</p></div></div>`).join('') || `<p class="col-span-full text-center py-40 text-gray-300 italic text-[11px]">No items found.</p>`;
+                grid.innerHTML = filtered.map(p => `<div class="product-card group fade-in ${state.selected.includes(p.id) ? 'selected' : ''}" onclick="viewDetail('${p.id}')">${!state.selectionId ? `<div class="select-btn shadow-sm" onclick="toggleSelect(event, '${p.id}')"><i class="fa-solid fa-check text-[10px]"></i></div>` : ''}<div class="img-container mb-4 shadow-sm"><img src="${p.img}" loading="lazy"></div><div class="px-1 text-left"><h3 class="capitalize truncate leading-none text-gray-900 font-semibold">${p.name}</h3><p class="price-tag mt-2 font-bold">${p.price} AED</p></div></div>`).join('') || `<p class="col-span-full text-center py-40 text-gray-300 italic text-[11px]">No items found.</p>`;
             }
             updateSelectionBar();
             window.scrollTo({top: 0});
@@ -409,15 +410,55 @@
         window.viewDetail = (id) => {
             const p = DATA.p.find(x => x.id === id);
             if (!p) return;
+            
+            safePushState({ p: id });
+
             const appMain = document.getElementById('app');
-            appMain.innerHTML = `<div class="max-w-5xl mx-auto py-8 fade-in px-4 pb-48 detail-view-container text-left"><button onclick="goBackToHome()" class="mb-10 text-[10px] font-bold text-gray-400 flex items-center gap-2 uppercase tracking-widest hover:text-black transition-all"><i class="fa-solid fa-arrow-left"></i> Back to ${state.selectionId ? 'Selection' : 'Catalogue'}</button><div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-start"><div><div class="aspect-square rounded-[2rem] overflow-hidden bg-gray-50 border border-gray-100 shadow-xl"><img src="${p.img}" id="main-detail-img" class="w-full h-full object-cover"></div><div class="thumb-grid"><div class="thumb-box active" onclick="switchImg('${p.img}', this)"><img src="${p.img}"></div>${p.img2 && p.img2 !== 'img/' ? `<div class="thumb-box" onclick="switchImg('${p.img2}', this)"><img src="${p.img2}"></div>` : ''}</div></div><div class="py-2"><span class="text-[9px] font-bold text-gray-300 tracking-[0.05em] uppercase mb-8 block">Boutique Selection</span><div class="space-y-12"><div><span class="detail-label">Item name:</span><h2 class="detail-product-name capitalize">${p.name}</h2></div><div><span class="detail-label">Price:</span><p class="detail-price-text">${p.price} AED</p></div><div class="h-px bg-gray-100 w-full"></div><div><span class="detail-label">Description:</span><p class="detail-description-text">${p.desc || 'Premium handcrafted selection curated specifically for our collection.'}</p></div></div><button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-6 rounded-2xl font-bold text-[12px] uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all mt-16 text-center">Inquire on WhatsApp</button></div></div></div>`;
+            appMain.innerHTML = `
+                <div class="max-w-5xl mx-auto py-8 md:py-16 fade-in px-4 pb-48 detail-view-container text-left">
+                    <button onclick="goBackToHome()" class="mb-12 text-[10px] font-bold text-gray-400 flex items-center gap-2 uppercase tracking-widest hover:text-black transition-all">
+                        <i class="fa-solid fa-arrow-left"></i> Back to ${state.selectionId ? 'Selection' : 'Catalogue'}
+                    </button>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+                        <div>
+                            <div class="aspect-square rounded-[2.5rem] overflow-hidden bg-white border border-gray-100 shadow-2xl">
+                                <img src="${p.img}" id="main-detail-img" class="w-full h-full object-cover">
+                            </div>
+                            <div class="thumb-grid justify-center lg:justify-start">
+                                <div class="thumb-box active" onclick="switchImg('${p.img}', this)"><img src="${p.img}"></div>
+                                ${p.img2 && p.img2 !== 'img/' ? `<div class="thumb-box" onclick="switchImg('${p.img2}', this)"><img src="${p.img2}"></div>` : ''}
+                            </div>
+                        </div>
+                        <div class="py-2">
+                            <span class="text-[9px] font-bold text-gray-300 tracking-[0.05em] uppercase mb-8 block">Exclusive Selection</span>
+                            <div class="space-y-12">
+                                <div><span class="detail-label">Item name:</span><h2 class="detail-product-name capitalize">${p.name}</h2></div>
+                                <div class="flex items-center gap-10 mt-8 mb-10 pb-10 border-b border-gray-100">
+                                    <div><span class="detail-label">Listing Price</span><p class="detail-price-text">${p.price} AED</p></div>
+                                    <div class="h-10 w-px bg-gray-100"></div>
+                                    <div><span class="detail-label">Availability</span><p class="text-sm font-bold text-black flex items-center gap-2"><span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> In Stock</p></div>
+                                </div>
+                                <div class="flex flex-wrap gap-4 mb-12">
+                                    ${p.size ? `<div class="spec-badge"><i class="fa-solid fa-maximize text-[10px] text-gray-400"></i><span>${p.size}</span></div>` : ''}
+                                    ${p.material ? `<div class="spec-badge"><i class="fa-solid fa-layer-group text-[10px] text-gray-400"></i><span>${p.material}</span></div>` : ''}
+                                </div>
+                                <div class="mb-14">
+                                    <span class="detail-label">Product Story</span>
+                                    <p class="detail-description-text mt-4 whitespace-pre-line">${p.desc || 'Premium handcrafted selection curated specifically for our collection.'}</p>
+                                </div>
+                            </div>
+                            <button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-7 rounded-3xl font-bold text-[12px] uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all mt-16 text-center">Inquire on WhatsApp</button>
+                        </div>
+                    </div>
+                </div>
+            `;
             window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
         window.saveProduct = async () => {
             const id = document.getElementById('edit-id').value;
             const btn = document.getElementById('p-save-btn');
-            const data = { name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, img: document.getElementById('p-img').value, img2: document.getElementById('p-img2').value, catId: document.getElementById('p-cat-id').value, desc: document.getElementById('p-desc').value, updatedAt: Date.now() };
+            const data = { name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, size: document.getElementById('p-size').value, material: document.getElementById('p-material').value, img: document.getElementById('p-img').value, img2: document.getElementById('p-img2').value, catId: document.getElementById('p-cat-id').value, desc: document.getElementById('p-desc').value, updatedAt: Date.now() };
             if (!data.name || !data.img) return showToast("Required info missing");
             btn.disabled = true; btn.innerText = "Syncing...";
             try { if (id) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), data); else await addDoc(prodCol, data); showToast("Synced Successfully"); resetForm(); DATA.p = []; refreshData(); } 
@@ -434,6 +475,21 @@
 
         window.deleteProduct = async (id) => { if (!confirm("Are you sure?")) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id)); showToast("Deleted"); DATA.p = DATA.p.filter(x => x.id !== id); renderAdminUI(); renderHome(); } catch (e) { showToast("Delete Error"); } };
         window.deleteCategory = async (id) => { if (!confirm("Delete Category?")) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'categories', id)); showToast("Category Removed"); DATA.p = []; refreshData(); } catch (e) { showToast("Error"); } };
+
+        window.editProduct = (id) => {
+            const item = DATA.p.find(x => x.id === id);
+            if(!item) return;
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('p-name').value = item.name;
+            document.getElementById('p-price').value = item.price;
+            document.getElementById('p-size').value = item.size || "";
+            document.getElementById('p-material').value = item.material || "";
+            document.getElementById('p-img').value = item.img;
+            document.getElementById('p-img2').value = item.img2 || "img/";
+            document.getElementById('p-cat-id').value = item.catId;
+            document.getElementById('p-desc').value = item.desc;
+            switchAdminTab('products');
+        };
 
         window.toggleSelect = (e, id) => { e.stopPropagation(); if (state.selected.includes(id)) state.selected = state.selected.filter(x => x !== id); else state.selected.push(id); renderHome(); };
 
@@ -499,9 +555,10 @@
         }
 
         window.resetForm = () => {
-            const fields = ['edit-id', 'p-name', 'p-price', 'p-desc'];
+            const fields = ['edit-id', 'p-name', 'p-price', 'p-size', 'p-material', 'p-desc'];
             fields.forEach(f => { const el = document.getElementById(f); if (el) el.value = ""; });
             document.getElementById('p-img').value = "img/"; document.getElementById('p-img2').value = "img/";
+            document.getElementById('p-save-btn').innerText = "Sync Product";
         };
 
         function showToast(msg) {
