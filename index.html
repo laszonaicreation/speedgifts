@@ -474,7 +474,7 @@
                 state.selectionId = null;
                 state.selected = [];
                 state.filter = 'all';
-                state.scrollPos = 0; // Reset scroll on fresh catalog load
+                state.scrollPos = 0;
                 safePushState({ s: null, p: null });
             } else {
                 safePushState({ p: null });
@@ -540,7 +540,6 @@
             }
             updateSelectionBar();
             
-            // RESTORE SCROLL POSITION (The Fix)
             if (!state.selectionId && state.filter !== 'wishlist') {
                 window.scrollTo({top: state.scrollPos});
             } else {
@@ -551,10 +550,7 @@
         window.viewDetail = (id) => {
             const p = DATA.p.find(x => x.id === id);
             if (!p) return;
-            
-            // SAVE CURRENT SCROLL POSITION
             state.scrollPos = window.scrollY;
-
             safePushState({ p: id });
             const appMain = document.getElementById('app');
             appMain.innerHTML = `
@@ -698,21 +694,31 @@
 
         window.switchImg = (src, el) => { const main = document.getElementById('main-detail-img'); if (main) main.src = src; document.querySelectorAll('.thumb-box').forEach(x => x.classList.remove('active')); if (el) el.classList.add('active'); };
 
-        function renderAdminUI() {
+        // ATTACHING TO WINDOW FOR HTML ACCESS (THE FIX)
+        window.renderAdminUI = () => {
             const pList = document.getElementById('admin-product-list');
             const cList = document.getElementById('admin-category-list');
             if (!pList || !cList) return;
-            const searchQuery = document.getElementById('admin-search')?.value.toLowerCase() || "";
-            const catFilter = document.getElementById('admin-cat-filter')?.value || "all";
-            let products = DATA.p;
-            if (searchQuery) products = products.filter(p => p.name.toLowerCase().includes(searchQuery));
-            if (catFilter !== 'all') products = products.filter(p => p.catId === catFilter);
+
+            const searchEl = document.getElementById('admin-search');
+            const filterEl = document.getElementById('admin-cat-filter');
+            
+            const searchQuery = searchEl ? searchEl.value.toLowerCase() : "";
+            const catFilter = filterEl ? filterEl.value : "all";
+
+            let products = DATA.p.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery);
+                const matchesCat = catFilter === 'all' || p.catId === catFilter;
+                return matchesSearch && matchesCat;
+            });
+
             const grouped = {};
             products.forEach(p => {
                 const catName = DATA.c.find(c => c.id === p.catId)?.name || "Uncategorized";
                 if (!grouped[catName]) grouped[catName] = [];
                 grouped[catName].push(p);
             });
+
             let pHtml = "";
             Object.keys(grouped).sort().forEach(cat => {
                 pHtml += `<div class="admin-list-category-header"><h5 class="text-[10px] font-black uppercase tracking-widest text-gray-400">${cat} (${grouped[cat].length})</h5></div>`;
@@ -721,16 +727,12 @@
                     pHtml += `<div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group"><img src="${p.img}" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-white"><div class="flex-1"><h4 class="font-bold text-[12px] capitalize truncate">${p.name}</h4><p class="text-[9px] text-gray-400 font-bold">${p.price} AED</p>${stockTag}</div><div class="flex gap-2"><button onclick="editProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-md text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[9px]"></i></button><button onclick="deleteProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[9px]"></i></button></div></div>`;
                 });
             });
+
             pList.innerHTML = pHtml || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No products found matching filters.</p>`;
             cList.innerHTML = DATA.c.map(c => `<div class="flex items-center gap-5 p-5 bg-gray-50 rounded-[2rem] border border-gray-100"><img src="${c.img}" class="w-14 h-14 rounded-full object-cover border-4 border-white shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Icon'"><div class="flex-1 font-bold text-[13px] uppercase">${c.name}</div><div class="flex gap-2"><button onclick="editCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[10px]"></i></button><button onclick="deleteCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[10px]"></i></button></div></div>`).join('') || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No Categories</p>`;
-        }
-
-        window.applyFilter = (id) => { 
-            state.filter = id; 
-            state.scrollPos = 0; // Filter reset cheyyumbool mathram mukalilekk pookum
-            renderHome(); 
         };
 
+        window.applyFilter = (id) => { state.filter = id; state.scrollPos = 0; renderHome(); };
         window.showAdminPanel = () => { document.getElementById('admin-panel').classList.remove('hidden'); document.body.style.overflow = 'hidden'; renderAdminUI(); };
         window.hideAdminPanel = () => { document.getElementById('admin-panel').classList.add('hidden'); document.body.style.overflow = 'auto'; };
         
@@ -764,8 +766,8 @@
             document.getElementById('p-stock').checked = true;
             document.getElementById('p-form-title').innerText = "Product Details";
             document.getElementById('c-form-title').innerText = "New Category";
-            document.getElementById('admin-search').value = "";
-            document.getElementById('admin-cat-filter').value = "all";
+            if (document.getElementById('admin-search')) document.getElementById('admin-search').value = "";
+            if (document.getElementById('admin-cat-filter')) document.getElementById('admin-cat-filter').value = "all";
         };
 
         function showToast(msg) {
