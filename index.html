@@ -74,7 +74,7 @@
         @media (min-width: 768px) { .brand-logo { font-size: 20px; } }
 
         .category-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; cursor: pointer; width: 78px; transition: 0.3s ease; }
-        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1.5px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
         
         /* PREMIUM GOLD & BLACK ANIMATION FOR CATEGORY */
         @keyframes categoryGlow {
@@ -683,7 +683,6 @@
                                     <p class="detail-description-text mt-4 whitespace-pre-line">${p.desc || 'Premium handcrafted selection curated specifically for our collection.'}</p>
                                 </div>
 
-                                <!-- DESKTOP VIEW BUTTON -->
                                 <button onclick="inquireOnWhatsApp('${p.id}')" class="hidden md:flex w-full bg-black text-white py-6 rounded-3xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-xl items-center justify-center gap-3 hover:scale-[1.02] transition-all">
                                     <i class="fa-brands fa-whatsapp text-lg"></i>
                                     INQUIRE ON WHATSAPP
@@ -693,10 +692,10 @@
                     </div>
                 </div>
                 
-                <!-- MOBILE STICKY FOOTER WITH PREMIUM GLOW ANIMATION -->
-                <div class="fixed md:hidden bottom-0 left-1/2 -translate-x-1/2 w-full flex justify-center p-4 z-[70] animate-selection" style="max-width: 500px;">
-                    <div class="w-full bg-white/80 backdrop-blur-xl border-2 p-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.15)] premium-btn-anim">
-                        <button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-all">
+                <!-- MOBILE STICKY FOOTER (RE-FIXED CENTERING) -->
+                <div class="fixed md:hidden bottom-0 left-1/2 -translate-x-1/2 w-full flex justify-center p-3 z-[70]" style="max-width: 500px;">
+                    <div class="w-11/12 bg-white/80 backdrop-blur-xl border border-white/20 p-1.5 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.15)] premium-btn-anim">
+                        <button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-3.5 rounded-full font-bold text-[10px] uppercase tracking-[0.15em] flex items-center justify-center gap-3 active:scale-95 transition-all">
                             <i class="fa-brands fa-whatsapp text-lg text-green-400"></i>
                             INQUIRE ON WHATSAPP
                         </button>
@@ -792,14 +791,14 @@
             const items = state.selected.map(id => DATA.p.find(p => p.id === id)).filter(x => x);
             let msg = `*Hello Speed Gifts!*\nI am interested in these items:\n\n`;
             items.forEach((item, i) => { const pUrl = `${window.location.origin}${window.location.pathname}?p=${item.id}`; msg += `${i+1}. *${item.name}* - ${item.price} AED\nLink: ${pUrl}\n\n`; });
-            window.open(`https://wa.me/919000000000?text=${encodeURIComponent(msg)}`);
+            window.open(`https://wa.me/971561010387?text=${encodeURIComponent(msg)}`);
         };
 
         window.inquireOnWhatsApp = (id) => {
             const p = DATA.p.find(x => x.id === id);
             const pUrl = `${window.location.origin}${window.location.pathname}?p=${p.id}`;
             const msg = `*Inquiry regarding:* ${p.name}\n*Price:* ${p.price} AED\n\n*Product Link:* ${pUrl}\n\nPlease let me know the availability.`;
-            window.open(`https://wa.me/919000000000?text=${encodeURIComponent(msg)}`);
+            window.open(`https://wa.me/971561010387?text=${encodeURIComponent(msg)}`);
         };
 
         window.switchImg = (src, el) => { const main = document.getElementById('main-detail-img'); if (main) main.src = src; document.querySelectorAll('.thumb-box').forEach(x => x.classList.remove('active')); if (el) el.classList.add('active'); };
