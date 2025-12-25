@@ -74,7 +74,7 @@
         @media (min-width: 768px) { .brand-logo { font-size: 20px; } }
 
         .category-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; cursor: pointer; width: 78px; transition: 0.3s ease; }
-        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1.5px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
         
         /* PREMIUM GOLD & BLACK ANIMATION FOR CATEGORY */
         @keyframes categoryGlow {
@@ -488,59 +488,61 @@
                 populateAdminCatFilter();
                 renderAdminUI();
 
-                // ROBUST IMAGE PRELOADING
+                // ROBUST SEQUENTIAL IMAGE PRELOADING
                 const loader = document.getElementById('loader');
                 if (loader && loader.style.display !== 'none') {
                     const currentProdId = new URLSearchParams(window.location.search).get('p');
-                    let imagesToWait = [];
+                    
+                    const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/');
+                    if (iconsToLoad.length > 0) {
+                        await Promise.all(iconsToLoad.map(url => new Promise((resolve) => {
+                            const img = new Image();
+                            img.src = url;
+                            img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
+                            img.onerror = resolve;
+                            setTimeout(resolve, 3000);
+                        })));
+                    }
 
+                    let mainImages = [];
                     if (currentProdId) {
                         const p = DATA.p.find(x => x.id === currentProdId);
-                        if (p) imagesToWait = [p.img, p.img2, p.img3].filter(u => u && u !== 'img/');
+                        if (p) mainImages = [p.img, p.img2, p.img3].filter(u => u && u !== 'img/');
                     } else {
-                        // Wait for visible icons + first 8 products
-                        const icons = DATA.c.map(c => c.img);
-                        const products = DATA.p.filter(p => p.inStock !== false).slice(0, 10).map(p => p.img);
-                        imagesToWait = [...icons, ...products].filter(u => u && u !== 'img/');
+                        mainImages = DATA.p.filter(p => p.inStock !== false).slice(0, 12).map(p => p.img);
                     }
 
-                    if (imagesToWait.length > 0) {
-                        const promises = imagesToWait.map(url => {
-                            return new Promise((resolve) => {
-                                const img = new Image();
-                                img.src = url;
-                                img.onload = () => {
-                                    if ('decode' in img) {
-                                        img.decode().then(resolve).catch(resolve);
-                                    } else {
-                                        resolve();
-                                    }
-                                };
-                                img.onerror = resolve; // Continue even if one fails
-                                // Timeout protection
-                                setTimeout(resolve, 5000);
-                            });
-                        });
-                        await Promise.all(promises);
+                    if (mainImages.length > 0) {
+                        await Promise.all(mainImages.map(url => new Promise((resolve) => {
+                            const img = new Image();
+                            img.src = url;
+                            img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
+                            img.onerror = resolve;
+                            setTimeout(resolve, 5000);
+                        })));
                     }
                     
-                    // Final small delay to let UI settle
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                    }, 150);
+                    loader.style.display = 'none';
                 }
             } catch (err) { console.error(err); showToast("Sync Error"); }
         }
 
-        const safePushState = (params) => {
+        const safePushState = (params, replace = false) => {
             try {
                 const url = new URL(window.location.href);
-                url.searchParams.delete('p');
+                // Clear existing specific params before applying new ones to avoid stacking
+                if (params.p === null) url.searchParams.delete('p');
                 if (params.s === null) url.searchParams.delete('s');
+                
                 Object.keys(params).forEach(key => {
                     if (params[key] !== null) url.searchParams.set(key, params[key]);
                 });
-                window.history.pushState({}, '', url.search);
+
+                if (replace) {
+                    window.history.replaceState({}, '', url.search);
+                } else {
+                    window.history.pushState({}, '', url.search);
+                }
             } catch (e) {
                 console.warn("Navigation state restricted.");
             }
@@ -678,13 +680,17 @@
             }
         }
 
+        // NAVIGATION BUG FIX: Logic to prevent jumping between product pages on back click
         window.viewDetail = (id, skipHistory = false) => {
             const p = DATA.p.find(x => x.id === id);
             if (!p) return;
             
             if (!skipHistory) {
-                state.scrollPos = window.scrollY;
-                safePushState({ p: id });
+                // If we are already on a detail page (has 'p' param), we should REPLACE instead of PUSH
+                // to ensure the back button always goes back to the home page.
+                const isAlreadyInDetail = new URLSearchParams(window.location.search).has('p');
+                state.scrollPos = isAlreadyInDetail ? state.scrollPos : window.scrollY;
+                safePushState({ p: id }, isAlreadyInDetail);
             }
 
             const appMain = document.getElementById('app');
