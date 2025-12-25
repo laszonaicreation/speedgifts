@@ -488,11 +488,12 @@
                 populateAdminCatFilter();
                 renderAdminUI();
 
-                // ROBUST SEQUENTIAL IMAGE PRELOADING
+                // STRICT SEQUENTIAL IMAGE PRELOADING (Category First)
                 const loader = document.getElementById('loader');
                 if (loader && loader.style.display !== 'none') {
                     const currentProdId = new URLSearchParams(window.location.search).get('p');
                     
+                    // PHASE 1: LOAD CATEGORY ICONS (Highest Priority)
                     const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/');
                     if (iconsToLoad.length > 0) {
                         await Promise.all(iconsToLoad.map(url => new Promise((resolve) => {
@@ -500,29 +501,34 @@
                             img.src = url;
                             img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
                             img.onerror = resolve;
-                            setTimeout(resolve, 3000);
+                            setTimeout(resolve, 2000); // 2s max for critical icons
                         })));
                     }
 
-                    let mainImages = [];
+                    // PHASE 2: LOAD INITIAL PRODUCTS (Only Top 8 for speed)
+                    let initialContentImages = [];
                     if (currentProdId) {
                         const p = DATA.p.find(x => x.id === currentProdId);
-                        if (p) mainImages = [p.img, p.img2, p.img3].filter(u => u && u !== 'img/');
+                        if (p) initialContentImages = [p.img, p.img2, p.img3].filter(u => u && u !== 'img/');
                     } else {
-                        mainImages = DATA.p.filter(p => p.inStock !== false).slice(0, 12).map(p => p.img);
+                        // Priority for visible products
+                        initialContentImages = DATA.p.filter(p => p.inStock !== false).slice(0, 8).map(p => p.img);
                     }
 
-                    if (mainImages.length > 0) {
-                        await Promise.all(mainImages.map(url => new Promise((resolve) => {
+                    if (initialContentImages.length > 0) {
+                        await Promise.all(initialContentImages.map(url => new Promise((resolve) => {
                             const img = new Image();
                             img.src = url;
                             img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
                             img.onerror = resolve;
-                            setTimeout(resolve, 5000);
+                            setTimeout(resolve, 3000); // 3s max for top row
                         })));
                     }
                     
-                    loader.style.display = 'none';
+                    // Final reveal with a small settle period
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 100);
                 }
             } catch (err) { console.error(err); showToast("Sync Error"); }
         }
@@ -530,22 +536,14 @@
         const safePushState = (params, replace = false) => {
             try {
                 const url = new URL(window.location.href);
-                // Clear existing specific params before applying new ones to avoid stacking
                 if (params.p === null) url.searchParams.delete('p');
                 if (params.s === null) url.searchParams.delete('s');
-                
                 Object.keys(params).forEach(key => {
                     if (params[key] !== null) url.searchParams.set(key, params[key]);
                 });
-
-                if (replace) {
-                    window.history.replaceState({}, '', url.search);
-                } else {
-                    window.history.pushState({}, '', url.search);
-                }
-            } catch (e) {
-                console.warn("Navigation state restricted.");
-            }
+                if (replace) window.history.replaceState({}, '', url.search);
+                else window.history.pushState({}, '', url.search);
+            } catch (e) { console.warn("Nav Error"); }
         };
 
         window.handleLogoClick = () => {
@@ -632,15 +630,10 @@
 
             let filtered = [];
             const stockFilter = (items) => items.filter(p => p.inStock !== false);
-            if (state.selectionId) {
-                filtered = DATA.p.filter(p => state.selected.includes(p.id));
-            } else if (state.filter === 'wishlist') {
-                filtered = DATA.p.filter(p => state.wishlist.includes(p.id));
-            } else if (state.filter !== 'all') {
-                filtered = stockFilter(DATA.p.filter(p => p.catId === state.filter));
-            } else {
-                filtered = stockFilter(DATA.p);
-            }
+            if (state.selectionId) filtered = DATA.p.filter(p => state.selected.includes(p.id));
+            else if (state.filter === 'wishlist') filtered = DATA.p.filter(p => state.wishlist.includes(p.id));
+            else if (state.filter !== 'all') filtered = stockFilter(DATA.p.filter(p => p.catId === state.filter));
+            else filtered = stockFilter(DATA.p);
 
             let catNameDisplay = "All Collections";
             if (state.selectionId) catNameDisplay = "Shared Selection";
@@ -660,11 +653,11 @@
             }
 
             if (grid) {
-                grid.innerHTML = filtered.map(p => `
+                grid.innerHTML = filtered.map((p, idx) => `
                     <div class="product-card group fade-in ${state.selected.includes(p.id) ? 'selected' : ''} ${state.wishlist.includes(p.id) ? 'wish-active' : ''}" onclick="viewDetail('${p.id}')">
                         <div class="wish-btn shadow-sm" onclick="toggleWishlist(event, '${p.id}')"><i class="fa-solid fa-heart text-[10px]"></i></div>
                         ${!state.selectionId && !state.filter.includes('wishlist') ? `<div class="select-btn shadow-sm" onclick="toggleSelect(event, '${p.id}')"><i class="fa-solid fa-check text-[10px]"></i></div>` : ''}
-                        <div class="img-container mb-4 shadow-sm"><img src="${p.img}" loading="lazy"></div>
+                        <div class="img-container mb-4 shadow-sm"><img src="${p.img}" ${idx > 8 ? 'loading="lazy"' : ''}></div>
                         <div class="px-1 text-left">
                             <h3 class="capitalize truncate leading-none text-gray-900 font-semibold">${p.name}</h3>
                             <p class="price-tag mt-2 font-bold">${p.price} AED</p>
@@ -673,21 +666,14 @@
                 `).join('') || `<p class="col-span-full text-center py-40 text-gray-300 italic text-[11px]">No items found.</p>`;
             }
             updateSelectionBar();
-            if (!state.selectionId && state.filter !== 'wishlist') {
-                window.scrollTo({top: state.scrollPos});
-            } else {
-                window.scrollTo({top: 0});
-            }
+            if (!state.selectionId && state.filter !== 'wishlist') window.scrollTo({top: state.scrollPos});
+            else window.scrollTo({top: 0});
         }
 
-        // NAVIGATION BUG FIX: Logic to prevent jumping between product pages on back click
         window.viewDetail = (id, skipHistory = false) => {
             const p = DATA.p.find(x => x.id === id);
             if (!p) return;
-            
             if (!skipHistory) {
-                // If we are already on a detail page (has 'p' param), we should REPLACE instead of PUSH
-                // to ensure the back button always goes back to the home page.
                 const isAlreadyInDetail = new URLSearchParams(window.location.search).has('p');
                 state.scrollPos = isAlreadyInDetail ? state.scrollPos : window.scrollY;
                 safePushState({ p: id }, isAlreadyInDetail);
@@ -729,7 +715,6 @@
                                     <span class="detail-label">Product Story</span>
                                     <p class="detail-description-text mt-4 whitespace-pre-line">${p.desc || 'Premium handcrafted selection curated specifically for our collection.'}</p>
                                 </div>
-
                                 <button onclick="inquireOnWhatsApp('${p.id}')" class="hidden md:flex w-full bg-black text-white py-6 rounded-3xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-xl items-center justify-center gap-3 hover:scale-[1.02] transition-all">
                                     <i class="fa-brands fa-whatsapp text-lg"></i>
                                     INQUIRE ON WHATSAPP
@@ -738,7 +723,6 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="fixed md:hidden bottom-0 left-1/2 -translate-x-1/2 w-full flex justify-center p-3 z-[70]" style="max-width: 500px;">
                     <div class="w-11/12 bg-white/80 backdrop-blur-xl border border-white/20 p-1.5 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.15)] premium-btn-anim">
                         <button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-3.5 rounded-full font-bold text-[10px] uppercase tracking-[0.15em] flex items-center justify-center gap-3 active:scale-95 transition-all">
