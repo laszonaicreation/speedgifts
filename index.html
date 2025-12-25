@@ -735,14 +735,14 @@
             const items = state.selected.map(id => DATA.p.find(p => p.id === id)).filter(x => x);
             let msg = `*Hello Speed Gifts!*\nI am interested in these items:\n\n`;
             items.forEach((item, i) => { const pUrl = `${window.location.origin}${window.location.pathname}?p=${item.id}`; msg += `${i+1}. *${item.name}* - ${item.price} AED\nLink: ${pUrl}\n\n`; });
-            window.open(`https://wa.me/919000000000?text=${encodeURIComponent(msg)}`);
+            window.open(`https://wa.me/971561010387?text=${encodeURIComponent(msg)}`);
         };
 
         window.inquireOnWhatsApp = (id) => {
             const p = DATA.p.find(x => x.id === id);
             const pUrl = `${window.location.origin}${window.location.pathname}?p=${p.id}`;
             const msg = `*Inquiry regarding:* ${p.name}\n*Price:* ${p.price} AED\n\n*Product Link:* ${pUrl}\n\nPlease let me know the availability.`;
-            window.open(`https://wa.me/919000000000?text=${encodeURIComponent(msg)}`);
+            window.open(`https://wa.me/971561010387?text=${encodeURIComponent(msg)}`);
         };
 
         window.switchImg = (src, el) => { const main = document.getElementById('main-detail-img'); if (main) main.src = src; document.querySelectorAll('.thumb-box').forEach(x => x.classList.remove('active')); if (el) el.classList.add('active'); };
