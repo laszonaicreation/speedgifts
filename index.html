@@ -488,26 +488,46 @@
                 populateAdminCatFilter();
                 renderAdminUI();
 
-                // NEW: Image Preloading logic to hide loader only after images are ready
+                // ROBUST IMAGE PRELOADING
                 const loader = document.getElementById('loader');
                 if (loader && loader.style.display !== 'none') {
-                    let urlsToLoad = [];
                     const currentProdId = new URLSearchParams(window.location.search).get('p');
-                    
+                    let imagesToWait = [];
+
                     if (currentProdId) {
                         const p = DATA.p.find(x => x.id === currentProdId);
-                        if (p) urlsToLoad = [p.img, p.img2, p.img3].filter(u => u && u !== 'img/');
+                        if (p) imagesToWait = [p.img, p.img2, p.img3].filter(u => u && u !== 'img/');
                     } else {
-                        // Preload first 8 visible images for the home grid
-                        urlsToLoad = DATA.p.filter(p => p.inStock !== false).slice(0, 8).map(p => p.img);
+                        // Wait for visible icons + first 8 products
+                        const icons = DATA.c.map(c => c.img);
+                        const products = DATA.p.filter(p => p.inStock !== false).slice(0, 10).map(p => p.img);
+                        imagesToWait = [...icons, ...products].filter(u => u && u !== 'img/');
                     }
 
-                    if (urlsToLoad.length > 0) {
-                        await Promise.all(urlsToLoad.map(url => new Promise(res => {
-                            const img = new Image(); img.src = url; img.onload = res; img.onerror = res;
-                        })));
+                    if (imagesToWait.length > 0) {
+                        const promises = imagesToWait.map(url => {
+                            return new Promise((resolve) => {
+                                const img = new Image();
+                                img.src = url;
+                                img.onload = () => {
+                                    if ('decode' in img) {
+                                        img.decode().then(resolve).catch(resolve);
+                                    } else {
+                                        resolve();
+                                    }
+                                };
+                                img.onerror = resolve; // Continue even if one fails
+                                // Timeout protection
+                                setTimeout(resolve, 5000);
+                            });
+                        });
+                        await Promise.all(promises);
                     }
-                    loader.style.display = 'none';
+                    
+                    // Final small delay to let UI settle
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 150);
                 }
             } catch (err) { console.error(err); showToast("Sync Error"); }
         }
@@ -713,7 +733,6 @@
                     </div>
                 </div>
                 
-                <!-- MOBILE STICKY FOOTER -->
                 <div class="fixed md:hidden bottom-0 left-1/2 -translate-x-1/2 w-full flex justify-center p-3 z-[70]" style="max-width: 500px;">
                     <div class="w-11/12 bg-white/80 backdrop-blur-xl border border-white/20 p-1.5 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.15)] premium-btn-anim">
                         <button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-3.5 rounded-full font-bold text-[10px] uppercase tracking-[0.15em] flex items-center justify-center gap-3 active:scale-95 transition-all">
