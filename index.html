@@ -74,7 +74,7 @@
         @media (min-width: 768px) { .brand-logo { font-size: 20px; } }
 
         .category-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; cursor: pointer; width: 78px; transition: 0.3s ease; }
-        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1.5px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
         
         /* PREMIUM GOLD & BLACK ANIMATION FOR CATEGORY */
         @keyframes categoryGlow {
@@ -323,6 +323,8 @@
                             <div class="bg-white/60 p-4 rounded-xl border border-gray-100 space-y-4">
                                 <input type="text" id="p-img" class="w-full bg-transparent outline-none text-sm font-semibold" value="img/" placeholder="Image Path 1">
                                 <input type="text" id="p-img2" class="w-full bg-transparent outline-none text-sm font-semibold" value="img/" placeholder="Image Path 2">
+                                <!-- NEW IMAGE 3 INPUT -->
+                                <input type="text" id="p-img3" class="w-full bg-transparent outline-none text-sm font-semibold" value="img/" placeholder="Image Path 3">
                             </div>
                             <textarea id="p-desc" rows="4" class="admin-input" placeholder="Product description..."></textarea>
                             <button onclick="saveProduct()" id="p-save-btn" class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-widest shadow-2 mt-4">Sync Product</button>
@@ -638,6 +640,7 @@
             }
         }
 
+        // UPDATED DETAIL VIEW: Multi-image support (3 images)
         window.viewDetail = (id, skipHistory = false) => {
             const p = DATA.p.find(x => x.id === id);
             if (!p) return;
@@ -661,6 +664,7 @@
                             <div class="thumb-grid justify-center lg:justify-start">
                                 <div class="thumb-box active" onclick="switchImg('${p.img}', this)"><img src="${p.img}"></div>
                                 ${p.img2 && p.img2 !== 'img/' ? `<div class="thumb-box" onclick="switchImg('${p.img2}', this)"><img src="${p.img2}"></div>` : ''}
+                                ${p.img3 && p.img3 !== 'img/' ? `<div class="thumb-box" onclick="switchImg('${p.img3}', this)"><img src="${p.img3}"></div>` : ''}
                             </div>
                         </div>
                         <div class="py-2">
@@ -692,7 +696,6 @@
                     </div>
                 </div>
                 
-                <!-- MOBILE STICKY FOOTER (RE-FIXED CENTERING) -->
                 <div class="fixed md:hidden bottom-0 left-1/2 -translate-x-1/2 w-full flex justify-center p-3 z-[70]" style="max-width: 500px;">
                     <div class="w-11/12 bg-white/80 backdrop-blur-xl border border-white/20 p-1.5 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.15)] premium-btn-anim">
                         <button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-3.5 rounded-full font-bold text-[10px] uppercase tracking-[0.15em] flex items-center justify-center gap-3 active:scale-95 transition-all">
@@ -708,7 +711,19 @@
         window.saveProduct = async () => {
             const id = document.getElementById('edit-id').value;
             const btn = document.getElementById('p-save-btn');
-            const data = { name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, size: document.getElementById('p-size').value, material: document.getElementById('p-material').value, inStock: document.getElementById('p-stock').checked, img: document.getElementById('p-img').value, img2: document.getElementById('p-img2').value, catId: document.getElementById('p-cat-id').value, desc: document.getElementById('p-desc').value, updatedAt: Date.now() };
+            const data = { 
+                name: document.getElementById('p-name').value, 
+                price: document.getElementById('p-price').value, 
+                size: document.getElementById('p-size').value, 
+                material: document.getElementById('p-material').value, 
+                inStock: document.getElementById('p-stock').checked, 
+                img: document.getElementById('p-img').value, 
+                img2: document.getElementById('p-img2').value, 
+                img3: document.getElementById('p-img3').value, // SAVE IMAGE 3
+                catId: document.getElementById('p-cat-id').value, 
+                desc: document.getElementById('p-desc').value, 
+                updatedAt: Date.now() 
+            };
             if (!data.name || !data.img) return showToast("Required info missing");
             btn.disabled = true; btn.innerText = "Syncing...";
             try { if (id) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), data); else await addDoc(prodCol, data); showToast("Synced Successfully"); resetForm(); DATA.p = []; refreshData(); } 
@@ -739,6 +754,7 @@
             document.getElementById('p-stock').checked = item.inStock !== false;
             document.getElementById('p-img').value = item.img;
             document.getElementById('p-img2').value = item.img2 || "img/";
+            document.getElementById('p-img3').value = item.img3 || "img/"; // LOAD IMAGE 3
             document.getElementById('p-cat-id').value = item.catId;
             document.getElementById('p-desc').value = item.desc;
             document.getElementById('p-form-title').innerText = "Editing: " + item.name;
@@ -863,7 +879,9 @@
         window.resetForm = () => {
             const fields = ['edit-id', 'edit-cat-id', 'p-name', 'p-price', 'p-size', 'p-material', 'p-desc', 'c-name'];
             fields.forEach(f => { const el = document.getElementById(f); if (el) el.value = ""; });
-            document.getElementById('p-img').value = "img/"; document.getElementById('p-img2').value = "img/";
+            document.getElementById('p-img').value = "img/"; 
+            document.getElementById('p-img2').value = "img/";
+            document.getElementById('p-img3').value = "img/"; // RESET IMAGE 3
             document.getElementById('c-img').value = "img/";
             document.getElementById('p-stock').checked = true;
             document.getElementById('p-form-title').innerText = "Product Details";
