@@ -74,8 +74,22 @@
         @media (min-width: 768px) { .brand-logo { font-size: 20px; } }
 
         .category-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; cursor: pointer; width: 78px; transition: 0.3s ease; }
-        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
-        .active .category-circle { border-color: var(--accent-black); transform: scale(1.1); }
+        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1.5px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        
+        /* NEW AESTHETIC COLOR ANIMATION FOR ACTIVE CATEGORY */
+        @keyframes categoryGlow {
+            0% { border-color: #1a1a1a; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+            33% { border-color: #D4AF37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); } /* Gold */
+            66% { border-color: #ff4757; box-shadow: 0 0 10px rgba(255, 71, 87, 0.3); } /* Aesthetic Rose */
+            100% { border-color: #1a1a1a; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+        }
+
+        .active .category-circle { 
+            animation: categoryGlow 3s infinite ease-in-out; 
+            transform: scale(1.1); 
+            border-width: 2px;
+        }
+
         .category-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 10px; color: var(--text-muted); text-align: center; }
 
         .img-container { aspect-ratio: 3/4; overflow: hidden; background: #fafafa; border-radius: 12px; border: 1px solid var(--border-light); position: relative; }
@@ -379,7 +393,6 @@
             }
         });
 
-        // FIXED: Listener for Browser Back/Forward buttons
         window.onpopstate = () => {
             refreshData(true);
         };
@@ -430,7 +443,6 @@
 
         async function refreshData(isNavigationOnly = false) {
             try {
-                // Only fetch if data is empty or it's a fresh load (not back button)
                 if (!isNavigationOnly || DATA.p.length === 0) {
                     const [pSnap, cSnap] = await Promise.all([getDocs(prodCol), getDocs(catCol)]);
                     DATA.p = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -445,7 +457,7 @@
 
                 if (!isAdminOpen) {
                     if (prodId && DATA.p.length > 0) {
-                        viewDetail(prodId, true); // true indicates skip history push
+                        viewDetail(prodId, true);
                     } else if (shareId) {
                         const selDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'selections', shareId));
                         if (selDoc.exists()) {
@@ -616,7 +628,6 @@
             }
         }
 
-        // UPDATED: Added skipHistory param to handle back button correctly
         window.viewDetail = (id, skipHistory = false) => {
             const p = DATA.p.find(x => x.id === id);
             if (!p) return;
@@ -662,7 +673,6 @@
                                     <p class="detail-description-text mt-4 whitespace-pre-line">${p.desc || 'Premium handcrafted selection curated specifically for our collection.'}</p>
                                 </div>
 
-                                <!-- DESKTOP VIEW BUTTON -->
                                 <button onclick="inquireOnWhatsApp('${p.id}')" class="hidden md:flex w-full bg-black text-white py-6 rounded-3xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-xl items-center justify-center gap-3 hover:scale-[1.02] transition-all">
                                     <i class="fa-brands fa-whatsapp text-lg"></i>
                                     INQUIRE ON WHATSAPP
@@ -672,7 +682,6 @@
                     </div>
                 </div>
                 
-                <!-- MOBILE STICKY FOOTER -->
                 <div class="fixed md:hidden bottom-0 left-1/2 -translate-x-1/2 w-full flex justify-center p-4 z-[70] animate-selection" style="max-width: 500px;">
                     <div class="w-full bg-white/80 backdrop-blur-xl border border-white/20 p-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.15)]">
                         <button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-all">
