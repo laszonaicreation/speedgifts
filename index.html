@@ -85,6 +85,7 @@
         @media (max-width: 767px) {
             .select-btn { display: none !important; }
             #selection-bar { display: none !important; }
+            .desktop-select-actions { display: none !important; }
         }
 
         .select-btn { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; background: rgba(255,255,255,0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 20; border: 1px solid #eee; transition: 0.3s; }
@@ -215,6 +216,7 @@
     <main id="app" class="max-w-7xl mx-auto px-5 pt-4 pb-48 min-h-screen">
         <div id="loader" class="flex flex-col items-center justify-center py-64">
             <div class="w-6 h-6 border-2 border-gray-100 border-t-black rounded-full animate-spin"></div>
+            <p class="mt-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 animate-pulse">Loading Speed Gifts Catalogue</p>
         </div>
     </main>
 
@@ -229,7 +231,15 @@
                 <button onclick="goBackToHome(true)" class="text-[9px] font-bold uppercase tracking-widest px-6 py-3 bg-black text-white rounded-full shadow-lg self-start">View All Products</button>
             </div>
         </div>
-        <div id="category-row" class="no-scrollbar flex gap-4 overflow-x-auto py-8 items-center border-b border-gray-50 mb-10 px-1"></div>
+        <div id="category-row" class="no-scrollbar flex gap-4 overflow-x-auto py-8 items-center border-b border-gray-50 mb-4 px-1"></div>
+        
+        <!-- DESKTOP SELECT ALL ACTION -->
+        <div class="desktop-select-actions flex justify-end mb-6 hidden md:flex">
+            <button id="select-all-btn" onclick="toggleSelectAll()" class="text-[8.5px] font-black uppercase tracking-widest py-2 px-4 rounded-full border border-gray-100 bg-gray-50 hover:bg-black hover:text-white transition-all text-gray-400">
+                Select All Visible
+            </button>
+        </div>
+
         <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-12 md:gap-x-8 md:gap-y-20"></div>
     </div>
 
@@ -482,6 +492,27 @@
             renderHome();
         };
 
+        window.toggleSelectAll = () => {
+            if (state.selectionId) return;
+            const stockFilter = (items) => items.filter(p => p.inStock !== false);
+            let currentVisible = [];
+            if (state.filter === 'wishlist') {
+                currentVisible = DATA.p.filter(p => state.wishlist.includes(p.id));
+            } else if (state.filter !== 'all') {
+                currentVisible = stockFilter(DATA.p.filter(p => p.catId === state.filter));
+            } else {
+                currentVisible = stockFilter(DATA.p);
+            }
+            const visibleIds = currentVisible.map(p => p.id);
+            const allVisibleSelected = visibleIds.every(id => state.selected.includes(id));
+            if (allVisibleSelected) {
+                state.selected = state.selected.filter(id => !visibleIds.includes(id));
+            } else {
+                state.selected = Array.from(new Set([...state.selected, ...visibleIds]));
+            }
+            renderHome();
+        };
+
         function renderHome() {
             const appMain = document.getElementById('app');
             const template = document.getElementById('home-view-template');
@@ -493,6 +524,7 @@
             const selectionHeader = document.getElementById('selection-header');
             const viewTitle = document.getElementById('view-title');
             const viewSubtitle = document.getElementById('view-subtitle');
+            const selectAllBtn = document.getElementById('select-all-btn');
 
             if (state.selectionId) {
                 if (selectionHeader) selectionHeader.classList.remove('hidden');
@@ -514,7 +546,6 @@
 
             let filtered = [];
             const stockFilter = (items) => items.filter(p => p.inStock !== false);
-
             if (state.selectionId) {
                 filtered = DATA.p.filter(p => state.selected.includes(p.id));
             } else if (state.filter === 'wishlist') {
@@ -523,6 +554,13 @@
                 filtered = stockFilter(DATA.p.filter(p => p.catId === state.filter));
             } else {
                 filtered = stockFilter(DATA.p);
+            }
+
+            if (selectAllBtn) {
+                const visibleIds = filtered.map(p => p.id);
+                const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => state.selected.includes(id));
+                selectAllBtn.innerText = allVisibleSelected ? "Deselect Visible" : "Select Visible Items";
+                if (state.selectionId) selectAllBtn.parentElement.classList.add('hidden');
             }
 
             if (grid) {
@@ -539,7 +577,6 @@
                 `).join('') || `<p class="col-span-full text-center py-40 text-gray-300 italic text-[11px]">No items found.</p>`;
             }
             updateSelectionBar();
-            
             if (!state.selectionId && state.filter !== 'wishlist') {
                 window.scrollTo({top: state.scrollPos});
             } else {
@@ -547,6 +584,7 @@
             }
         }
 
+        // UPDATED DETAIL VIEW: Standard word 'INQUIRE ON WHATSAPP' and Center Fix for Mobile
         window.viewDetail = (id) => {
             const p = DATA.p.find(x => x.id === id);
             if (!p) return;
@@ -554,7 +592,7 @@
             safePushState({ p: id });
             const appMain = document.getElementById('app');
             appMain.innerHTML = `
-                <div class="max-w-5xl mx-auto py-8 md:py-16 fade-in px-4 pb-48 detail-view-container text-left">
+                <div class="max-w-5xl mx-auto py-8 md:py-16 fade-in px-4 pb-64 detail-view-container text-left">
                     <button onclick="goBackToHome()" class="mb-12 text-[10px] font-bold text-gray-400 flex items-center gap-2 uppercase tracking-widest hover:text-black transition-all">
                         <i class="fa-solid fa-arrow-left"></i> Back to ${state.filter === 'wishlist' ? 'Favorites' : (state.selectionId ? 'Selection' : 'Catalogue')}
                     </button>
@@ -587,9 +625,24 @@
                                     <span class="detail-label">Product Story</span>
                                     <p class="detail-description-text mt-4 whitespace-pre-line">${p.desc || 'Premium handcrafted selection curated specifically for our collection.'}</p>
                                 </div>
+
+                                <!-- DESKTOP VIEW BUTTON -->
+                                <button onclick="inquireOnWhatsApp('${p.id}')" class="hidden md:flex w-full bg-black text-white py-6 rounded-3xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-xl items-center justify-center gap-3 hover:scale-[1.02] transition-all">
+                                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                                    INQUIRE ON WHATSAPP
+                                </button>
                             </div>
-                            <button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-7 rounded-3xl font-bold text-[12px] uppercase tracking-widest shadow-2xl hover:scale-[1.02] transition-all mt-16 text-center">Inquire on WhatsApp</button>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- MOBILE STICKY FOOTER (Fixed Center & translateX logic) -->
+                <div class="fixed md:hidden bottom-0 left-1/2 -translate-x-1/2 w-full flex justify-center p-4 z-[70] animate-selection" style="max-width: 500px;">
+                    <div class="w-full bg-white/80 backdrop-blur-xl border border-white/20 p-2 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.15)]">
+                        <button onclick="inquireOnWhatsApp('${p.id}')" class="w-full bg-black text-white py-4 rounded-full font-bold text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-95 transition-all">
+                            <i class="fa-brands fa-whatsapp text-lg text-green-400"></i>
+                            INQUIRE ON WHATSAPP
+                        </button>
                     </div>
                 </div>
             `;
@@ -694,31 +747,25 @@
 
         window.switchImg = (src, el) => { const main = document.getElementById('main-detail-img'); if (main) main.src = src; document.querySelectorAll('.thumb-box').forEach(x => x.classList.remove('active')); if (el) el.classList.add('active'); };
 
-        // ATTACHING TO WINDOW FOR HTML ACCESS (THE FIX)
         window.renderAdminUI = () => {
             const pList = document.getElementById('admin-product-list');
             const cList = document.getElementById('admin-category-list');
             if (!pList || !cList) return;
-
             const searchEl = document.getElementById('admin-search');
             const filterEl = document.getElementById('admin-cat-filter');
-            
             const searchQuery = searchEl ? searchEl.value.toLowerCase() : "";
             const catFilter = filterEl ? filterEl.value : "all";
-
             let products = DATA.p.filter(p => {
                 const matchesSearch = p.name.toLowerCase().includes(searchQuery);
                 const matchesCat = catFilter === 'all' || p.catId === catFilter;
                 return matchesSearch && matchesCat;
             });
-
             const grouped = {};
             products.forEach(p => {
                 const catName = DATA.c.find(c => c.id === p.catId)?.name || "Uncategorized";
                 if (!grouped[catName]) grouped[catName] = [];
                 grouped[catName].push(p);
             });
-
             let pHtml = "";
             Object.keys(grouped).sort().forEach(cat => {
                 pHtml += `<div class="admin-list-category-header"><h5 class="text-[10px] font-black uppercase tracking-widest text-gray-400">${cat} (${grouped[cat].length})</h5></div>`;
@@ -727,7 +774,6 @@
                     pHtml += `<div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group"><img src="${p.img}" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-white"><div class="flex-1"><h4 class="font-bold text-[12px] capitalize truncate">${p.name}</h4><p class="text-[9px] text-gray-400 font-bold">${p.price} AED</p>${stockTag}</div><div class="flex gap-2"><button onclick="editProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-md text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[9px]"></i></button><button onclick="deleteProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[9px]"></i></button></div></div>`;
                 });
             });
-
             pList.innerHTML = pHtml || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No products found matching filters.</p>`;
             cList.innerHTML = DATA.c.map(c => `<div class="flex items-center gap-5 p-5 bg-gray-50 rounded-[2rem] border border-gray-100"><img src="${c.img}" class="w-14 h-14 rounded-full object-cover border-4 border-white shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Icon'"><div class="flex-1 font-bold text-[13px] uppercase">${c.name}</div><div class="flex gap-2"><button onclick="editCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[10px]"></i></button><button onclick="deleteCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[10px]"></i></button></div></div>`).join('') || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No Categories</p>`;
         };
