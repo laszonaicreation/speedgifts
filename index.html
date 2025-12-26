@@ -74,7 +74,7 @@
         @media (min-width: 768px) { .brand-logo { font-size: 20px; } }
 
         .category-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; cursor: pointer; width: 78px; transition: 0.3s ease; }
-        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1.5px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
         
         /* PREMIUM GOLD & BLACK ANIMATION FOR CATEGORY */
         @keyframes categoryGlow {
@@ -488,12 +488,10 @@
                 populateAdminCatFilter();
                 renderAdminUI();
 
-                // STRICT SEQUENTIAL IMAGE PRELOADING (Category First)
                 const loader = document.getElementById('loader');
                 if (loader && loader.style.display !== 'none') {
                     const currentProdId = new URLSearchParams(window.location.search).get('p');
                     
-                    // PHASE 1: LOAD CATEGORY ICONS (Highest Priority)
                     const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/');
                     if (iconsToLoad.length > 0) {
                         await Promise.all(iconsToLoad.map(url => new Promise((resolve) => {
@@ -501,17 +499,15 @@
                             img.src = url;
                             img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
                             img.onerror = resolve;
-                            setTimeout(resolve, 2000); // 2s max for critical icons
+                            setTimeout(resolve, 2000);
                         })));
                     }
 
-                    // PHASE 2: LOAD INITIAL PRODUCTS (Only Top 8 for speed)
                     let initialContentImages = [];
                     if (currentProdId) {
                         const p = DATA.p.find(x => x.id === currentProdId);
                         if (p) initialContentImages = [p.img, p.img2, p.img3].filter(u => u && u !== 'img/');
                     } else {
-                        // Priority for visible products
                         initialContentImages = DATA.p.filter(p => p.inStock !== false).slice(0, 8).map(p => p.img);
                     }
 
@@ -521,11 +517,10 @@
                             img.src = url;
                             img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
                             img.onerror = resolve;
-                            setTimeout(resolve, 3000); // 3s max for top row
+                            setTimeout(resolve, 3000);
                         })));
                     }
                     
-                    // Final reveal with a small settle period
                     setTimeout(() => {
                         loader.style.display = 'none';
                     }, 100);
@@ -541,8 +536,11 @@
                 Object.keys(params).forEach(key => {
                     if (params[key] !== null) url.searchParams.set(key, params[key]);
                 });
-                if (replace) window.history.replaceState({}, '', url.search);
-                else window.history.pushState({}, '', url.search);
+                
+                // FIXED: Use full path including pathname to ensure persistent address bar update
+                const finalPath = url.pathname + url.search;
+                if (replace) window.history.replaceState({}, '', finalPath);
+                else window.history.pushState({}, '', finalPath);
             } catch (e) { console.warn("Nav Error"); }
         };
 
@@ -566,6 +564,7 @@
                 state.scrollPos = 0;
                 safePushState({ s: null, p: null });
             } else {
+                // FIXED: Explicitly clearing product ID when going back to home via UI
                 safePushState({ p: null });
             }
             renderHome();
