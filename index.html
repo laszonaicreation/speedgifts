@@ -74,9 +74,8 @@
         @media (min-width: 768px) { .brand-logo { font-size: 20px; } }
 
         .category-item { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; cursor: pointer; width: 78px; transition: 0.3s ease; }
-        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        .category-circle { width: 58px; height: 58px; border-radius: 50%; border: 1.5px solid var(--border-light); padding: 3px; background: #fff; transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
         
-        /* PREMIUM GOLD & BLACK ANIMATION FOR CATEGORY */
         @keyframes categoryGlow {
             0% { border-color: #111111; box-shadow: 0 0 5px rgba(0,0,0,0.05); }
             50% { border-color: #D4AF37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
@@ -89,7 +88,6 @@
             border-width: 2px;
         }
 
-        /* PREMIUM BUTTON ANIMATION (GOLD/BLACK LINE EFFECT) */
         @keyframes buttonPremiumGlow {
             0% { border-color: rgba(0,0,0,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
             50% { border-color: #D4AF37; box-shadow: 0 5px 25px rgba(212, 175, 55, 0.3); }
@@ -404,6 +402,13 @@
             }
         });
 
+        // FIXED: Using Pageshow to handle tab reactivation and WhatsApp return
+        window.addEventListener('pageshow', (event) => {
+            if (DATA.p.length > 0) {
+                refreshData(true);
+            }
+        });
+
         window.onpopstate = () => {
             refreshData(true);
         };
@@ -434,7 +439,6 @@
         window.toggleWishlist = async (e, id) => {
             e.stopPropagation();
             if (!state.user) return showToast("Authenticating...");
-            
             const card = e.target.closest('.product-card');
             if (state.wishlist.includes(id)) {
                 state.wishlist = state.wishlist.filter(x => x !== id);
@@ -443,9 +447,7 @@
                 state.wishlist.push(id);
                 if (card) card.classList.add('wish-active');
             }
-
             updateWishlistBadge();
-
             try {
                 await setDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'data', 'wishlist'), { ids: state.wishlist });
                 if (state.filter === 'wishlist') renderHome();
@@ -459,50 +461,41 @@
                     DATA.p = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                     DATA.c = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
                 }
-                
                 const urlParams = new URLSearchParams(window.location.search);
                 const shareId = urlParams.get('s');
                 const prodId = urlParams.get('p');
-
                 const isAdminOpen = !document.getElementById('admin-panel').classList.contains('hidden');
-
                 if (!isAdminOpen) {
-                    if (prodId && DATA.p.length > 0) {
-                        viewDetail(prodId, true);
-                    } else if (shareId) {
+                    if (prodId && DATA.p.length > 0) viewDetail(prodId, true);
+                    else if (shareId) {
                         const selDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'selections', shareId));
                         if (selDoc.exists()) {
                             state.selectionId = shareId;
                             state.selected = selDoc.data().ids;
                             renderHome();
                         }
-                    } else {
-                        renderHome();
-                    }
+                    } else renderHome();
                 } else {
                     const appArea = document.getElementById('app');
                     if (appArea.querySelector('#product-grid')) renderHome();
                 }
-                
                 populateCatSelect();
                 populateAdminCatFilter();
                 renderAdminUI();
-
                 const loader = document.getElementById('loader');
                 if (loader && loader.style.display !== 'none') {
+                    // SAFETY TIMEOUT: Ensure loader always disappears after 6 seconds
+                    const safetyTimer = setTimeout(() => { loader.style.display = 'none'; }, 6000);
                     const currentProdId = new URLSearchParams(window.location.search).get('p');
-                    
                     const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/');
                     if (iconsToLoad.length > 0) {
                         await Promise.all(iconsToLoad.map(url => new Promise((resolve) => {
-                            const img = new Image();
-                            img.src = url;
+                            const img = new Image(); img.src = url;
                             img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
                             img.onerror = resolve;
                             setTimeout(resolve, 2000);
                         })));
                     }
-
                     let initialContentImages = [];
                     if (currentProdId) {
                         const p = DATA.p.find(x => x.id === currentProdId);
@@ -510,22 +503,22 @@
                     } else {
                         initialContentImages = DATA.p.filter(p => p.inStock !== false).slice(0, 8).map(p => p.img);
                     }
-
                     if (initialContentImages.length > 0) {
                         await Promise.all(initialContentImages.map(url => new Promise((resolve) => {
-                            const img = new Image();
-                            img.src = url;
+                            const img = new Image(); img.src = url;
                             img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
                             img.onerror = resolve;
                             setTimeout(resolve, 3000);
                         })));
                     }
-                    
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                    }, 100);
+                    clearTimeout(safetyTimer);
+                    setTimeout(() => { loader.style.display = 'none'; }, 100);
                 }
-            } catch (err) { console.error(err); showToast("Sync Error"); }
+            } catch (err) { 
+                console.error(err); 
+                const loader = document.getElementById('loader');
+                if (loader) loader.style.display = 'none';
+            }
         }
 
         const safePushState = (params, replace = false) => {
@@ -536,8 +529,6 @@
                 Object.keys(params).forEach(key => {
                     if (params[key] !== null) url.searchParams.set(key, params[key]);
                 });
-                
-                // FIXED: Use full path including pathname to ensure persistent address bar update
                 const finalPath = url.pathname + url.search;
                 if (replace) window.history.replaceState({}, '', finalPath);
                 else window.history.pushState({}, '', finalPath);
@@ -563,10 +554,7 @@
                 state.filter = 'all';
                 state.scrollPos = 0;
                 safePushState({ s: null, p: null });
-            } else {
-                // FIXED: Explicitly clearing product ID when going back to home via UI
-                safePushState({ p: null });
-            }
+            } else safePushState({ p: null });
             renderHome();
         };
 
@@ -574,20 +562,13 @@
             if (state.selectionId) return;
             const stockFilter = (items) => items.filter(p => p.inStock !== false);
             let currentVisible = [];
-            if (state.filter === 'wishlist') {
-                currentVisible = DATA.p.filter(p => state.wishlist.includes(p.id));
-            } else if (state.filter !== 'all') {
-                currentVisible = stockFilter(DATA.p.filter(p => p.catId === state.filter));
-            } else {
-                currentVisible = stockFilter(DATA.p);
-            }
+            if (state.filter === 'wishlist') currentVisible = DATA.p.filter(p => state.wishlist.includes(p.id));
+            else if (state.filter !== 'all') currentVisible = stockFilter(DATA.p.filter(p => p.catId === state.filter));
+            else currentVisible = stockFilter(DATA.p);
             const visibleIds = currentVisible.map(p => p.id);
             const allVisibleSelected = visibleIds.every(id => state.selected.includes(id));
-            if (allVisibleSelected) {
-                state.selected = state.selected.filter(id => !visibleIds.includes(id));
-            } else {
-                state.selected = Array.from(new Set([...state.selected, ...visibleIds]));
-            }
+            if (allVisibleSelected) state.selected = state.selected.filter(id => !visibleIds.includes(id));
+            else state.selected = Array.from(new Set([...state.selected, ...visibleIds]));
             renderHome();
         };
 
@@ -596,7 +577,6 @@
             const template = document.getElementById('home-view-template');
             if (!appMain || !template) return;
             appMain.innerHTML = template.innerHTML;
-
             const catRow = document.getElementById('category-row');
             const grid = document.getElementById('product-grid');
             const selectionHeader = document.getElementById('selection-header');
@@ -606,7 +586,6 @@
             const activeCatTitle = document.getElementById('active-category-title');
             const activeCatTitleMob = document.getElementById('active-category-title-mob');
             const categorySelector = document.getElementById('category-selector-container');
-
             if (state.selectionId) {
                 if (selectionHeader) selectionHeader.classList.remove('hidden');
                 if (catRow) catRow.classList.add('hidden');
@@ -626,14 +605,12 @@
                 });
                 if (catRow) catRow.innerHTML = cHtml;
             }
-
             let filtered = [];
             const stockFilter = (items) => items.filter(p => p.inStock !== false);
             if (state.selectionId) filtered = DATA.p.filter(p => state.selected.includes(p.id));
             else if (state.filter === 'wishlist') filtered = DATA.p.filter(p => state.wishlist.includes(p.id));
             else if (state.filter !== 'all') filtered = stockFilter(DATA.p.filter(p => p.catId === state.filter));
             else filtered = stockFilter(DATA.p);
-
             let catNameDisplay = "All Collections";
             if (state.selectionId) catNameDisplay = "Shared Selection";
             else if (state.filter === 'wishlist') catNameDisplay = "Favorites List";
@@ -643,14 +620,12 @@
             }
             if (activeCatTitle) activeCatTitle.innerText = catNameDisplay;
             if (activeCatTitleMob) activeCatTitleMob.innerText = catNameDisplay;
-
             if (selectAllBtn) {
                 const visibleIds = filtered.map(p => p.id);
                 const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => state.selected.includes(id));
                 selectAllBtn.innerText = allVisibleSelected ? "Deselect Visible" : "Select Visible Items";
                 if (state.selectionId) selectAllBtn.parentElement.classList.add('hidden');
             }
-
             if (grid) {
                 grid.innerHTML = filtered.map((p, idx) => `
                     <div class="product-card group fade-in ${state.selected.includes(p.id) ? 'selected' : ''} ${state.wishlist.includes(p.id) ? 'wish-active' : ''}" onclick="viewDetail('${p.id}')">
@@ -677,8 +652,8 @@
                 state.scrollPos = isAlreadyInDetail ? state.scrollPos : window.scrollY;
                 safePushState({ p: id }, isAlreadyInDetail);
             }
-
             const appMain = document.getElementById('app');
+            if (!appMain) return;
             appMain.innerHTML = `
                 <div class="max-w-5xl mx-auto py-8 md:py-16 fade-in px-4 pb-64 detail-view-container text-left">
                     <button onclick="goBackToHome()" class="mb-12 text-[10px] font-bold text-gray-400 flex items-center gap-2 uppercase tracking-widest hover:text-black transition-all">
@@ -821,14 +796,14 @@
             const items = state.selected.map(id => DATA.p.find(p => p.id === id)).filter(x => x);
             let msg = `*Hello Speed Gifts!*\nI am interested in these items:\n\n`;
             items.forEach((item, i) => { const pUrl = `${window.location.origin}${window.location.pathname}?p=${item.id}`; msg += `${i+1}. *${item.name}* - ${item.price} AED\nLink: ${pUrl}\n\n`; });
-            window.open(`https://wa.me/919000000000?text=${encodeURIComponent(msg)}`);
+            window.open(`https://wa.me/971561010387?text=${encodeURIComponent(msg)}`);
         };
 
         window.inquireOnWhatsApp = (id) => {
             const p = DATA.p.find(x => x.id === id);
             const pUrl = `${window.location.origin}${window.location.pathname}?p=${p.id}`;
             const msg = `*Inquiry regarding:* ${p.name}\n*Price:* ${p.price} AED\n\n*Product Link:* ${pUrl}\n\nPlease let me know the availability.`;
-            window.open(`https://wa.me/919000000000?text=${encodeURIComponent(msg)}`);
+            window.open(`https://wa.me/971561010387?text=${encodeURIComponent(msg)}`);
         };
 
         window.switchImg = (src, el) => { const main = document.getElementById('main-detail-img'); if (main) main.src = src; document.querySelectorAll('.thumb-box').forEach(x => x.classList.remove('active')); if (el) el.classList.add('active'); };
