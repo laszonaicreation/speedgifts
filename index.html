@@ -340,17 +340,26 @@
                         </div>
                     </div>
 
-                    <!-- BACKUP & RECOVERY SECTION -->
+                    <!-- MIGRATION & CLOUD TOOLS -->
                     <div class="mt-10 p-6 bg-gray-50 rounded-[2rem] border border-gray-100 space-y-4">
-                        <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Cloud Data Tools</h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button onclick="exportData()" class="text-[9px] font-bold uppercase bg-white border border-gray-200 py-3 rounded-xl hover:bg-black hover:text-white transition-all">Backup JSON</button>
-                            <label class="text-[9px] font-bold uppercase bg-white border border-gray-200 py-3 rounded-xl hover:bg-black hover:text-white transition-all text-center cursor-pointer">
-                                Restore Data
-                                <input type="file" id="import-input" class="hidden" accept=".json" onchange="importData(event)">
-                            </label>
+                        <h3 class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Migration & Cloud Tools</h3>
+                        <div class="grid grid-cols-1 gap-2">
+                            <button onclick="exportExcel()" class="text-[9px] font-black uppercase bg-black text-white py-4 rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-file-excel"></i> Export Excel (CSV)
+                            </button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="exportData()" class="text-[9px] font-bold uppercase bg-white border border-gray-200 py-3 rounded-xl hover:bg-black hover:text-white transition-all">Backup JSON</button>
+                                <label class="text-[9px] font-bold uppercase bg-white border border-gray-200 py-3 rounded-xl hover:bg-black hover:text-white transition-all text-center cursor-pointer">
+                                    Restore Data
+                                    <input type="file" id="import-input" class="hidden" accept=".json" onchange="importData(event)">
+                                </label>
+                            </div>
+                            <!-- NEW UNIVERSAL MIGRATION BUTTON -->
+                            <button onclick="copyUniversalJSON()" class="text-[9px] font-black uppercase bg-white border-2 border-dashed border-gray-200 py-3 rounded-xl hover:border-black transition-all flex items-center justify-center gap-2 text-gray-400 hover:text-black">
+                                <i class="fa-solid fa-code"></i> Copy Universal Schema (Dev-Ready)
+                            </button>
                         </div>
-                        <p class="text-[8px] text-gray-400 text-center italic">Backup file keeps your inventory safe for future migration.</p>
+                        <p class="text-[8px] text-gray-400 text-center italic">Future-proof your data for any database migration.</p>
                     </div>
                 </div>
                 <div class="lg:col-span-7">
@@ -430,10 +439,23 @@
             }
         };
 
-        window.addEventListener('pageshow', (e) => { if (e.persisted || (window.performance && window.performance.navigation.type === 2)) handleReentry(); });
-        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') setTimeout(handleReentry, 100); });
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted || (window.performance && window.performance.navigation.type === 2)) {
+                setTimeout(handleReentry, 150);
+            }
+        });
 
-        window.onpopstate = () => { refreshData(true); };
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                setTimeout(handleReentry, 250);
+            }
+        });
+
+        window.onfocus = () => { handleReentry(); };
+
+        window.onpopstate = () => {
+            refreshData(true);
+        };
 
         async function loadWishlist() {
             if (!state.user) return;
@@ -450,8 +472,12 @@
             const badge = document.getElementById('nav-wishlist-count');
             if (!badge) return;
             const count = state.wishlist.length;
-            if (count > 0) { badge.innerText = count; badge.classList.remove('hidden'); } 
-            else { badge.classList.add('hidden'); }
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
         }
 
         window.toggleWishlist = async (e, id) => {
@@ -505,7 +531,7 @@
                 
                 const loader = document.getElementById('loader');
                 if (loader && loader.style.display !== 'none') {
-                    const safetyTimer = setTimeout(() => { loader.style.display = 'none'; }, 5000); 
+                    const safetyTimer = setTimeout(() => { loader.style.display = 'none'; }, 4000); 
                     const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/');
                     if (iconsToLoad.length > 0) {
                         await Promise.all(iconsToLoad.map(url => new Promise((resolve) => {
@@ -545,7 +571,9 @@
                 const url = new URL(window.location.href);
                 if (params.p === null) url.searchParams.delete('p');
                 if (params.s === null) url.searchParams.delete('s');
-                Object.keys(params).forEach(key => { if (params[key] !== null) url.searchParams.set(key, params[key]); });
+                Object.keys(params).forEach(key => {
+                    if (params[key] !== null) url.searchParams.set(key, params[key]);
+                });
                 const finalPath = url.pathname + url.search;
                 if (replace) window.history.replaceState({}, '', finalPath);
                 else window.history.pushState({}, '', finalPath);
@@ -565,8 +593,15 @@
         };
 
         window.goBackToHome = (forceReset = false) => {
-            if (forceReset) { state.selectionId = null; state.selected = []; state.filter = 'all'; state.scrollPos = 0; safePushState({ s: null, p: null }); } 
-            else safePushState({ p: null });
+            if (forceReset) {
+                state.selectionId = null;
+                state.selected = [];
+                state.filter = 'all';
+                state.scrollPos = 0;
+                safePushState({ s: null, p: null });
+            } else {
+                safePushState({ p: null });
+            }
             renderHome();
         };
 
@@ -656,6 +691,21 @@
             else window.scrollTo({top: 0});
         }
 
+        // NEW: updateSelectionBar logic explicitly added to prevent ReferenceError
+        window.updateSelectionBar = () => {
+            const bar = document.getElementById('selection-bar');
+            const count = document.getElementById('selected-count');
+            if (!bar) return;
+            if (state.selected.length > 0 && !state.selectionId && state.filter !== 'wishlist') {
+                bar.style.display = 'flex';
+                bar.classList.add('animate-selection');
+                if (count) count.innerText = `${state.selected.length} items`;
+            } else {
+                bar.style.display = 'none';
+                bar.classList.remove('animate-selection');
+            }
+        };
+
         window.viewDetail = (id, skipHistory = false) => {
             const p = DATA.p.find(x => x.id === id);
             if (!p) return;
@@ -727,7 +777,7 @@
             const data = { name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, size: document.getElementById('p-size').value, material: document.getElementById('p-material').value, inStock: document.getElementById('p-stock').checked, img: document.getElementById('p-img').value, img2: document.getElementById('p-img2').value, img3: document.getElementById('p-img3').value, catId: document.getElementById('p-cat-id').value, desc: document.getElementById('p-desc').value, updatedAt: Date.now() };
             if (!data.name || !data.img) return showToast("Required info missing");
             btn.disabled = true; btn.innerText = "Syncing...";
-            try { if (id) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), data); else await addDoc(prodCol, data); showToast("Synced Successfully"); resetForm(); refreshData(); } 
+            try { if (id) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), data); else await addDoc(prodCol, data); showToast("Synced Successfully"); resetForm(); DATA.p = []; refreshData(); } 
             catch (e) { showToast("Save Error"); } finally { btn.disabled = false; btn.innerText = "Sync Product"; }
         };
 
@@ -737,7 +787,7 @@
             const data = { name: document.getElementById('c-name').value, img: document.getElementById('c-img').value };
             if (!data.name) return showToast("Name required");
             btn.disabled = true; btn.innerText = "Syncing...";
-            try { if (id) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'categories', id), data); else await addDoc(catCol, data); showToast("Category Synced"); resetForm(); refreshData(); } 
+            try { if (id) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'categories', id), data); else await addDoc(catCol, data); showToast("Category Synced"); resetForm(); DATA.p = []; refreshData(); } 
             catch (e) { showToast("Category Error"); } finally { btn.disabled = false; btn.innerText = "Sync Category"; }
         };
 
@@ -774,54 +824,88 @@
             window.scrollTo({top: 0, behavior: 'smooth'});
         };
 
-        // NEW: EXPORT DATA LOGIC (Backup to JSON File)
         window.exportData = () => {
             try {
                 const backup = { products: DATA.p, categories: DATA.c, timestamp: Date.now() };
                 const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
+                const a = document.createElement('a'); a.href = url;
                 a.download = `speedgifts_backup_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
                 showToast("Backup Created!");
             } catch (err) { showToast("Export Failed"); }
         };
 
-        // NEW: IMPORT DATA LOGIC (Recovery from JSON File)
+        window.exportExcel = () => {
+            try {
+                if (DATA.p.length === 0) return showToast("No products found");
+                const escapeCSV = (val) => { if (val === undefined || val === null) return '""'; let s = String(val).replace(/"/g, '""'); return `"${s}"`; };
+                const headers = ["ID", "Name", "Price (AED)", "Category", "Stock Status", "Size", "Material", "Description", "Image 1", "Image 2", "Image 3"];
+                const rows = DATA.p.map(p => {
+                    const catName = DATA.c.find(c => c.id === p.catId)?.name || "Uncategorized";
+                    const stockStatus = p.inStock !== false ? "In Stock" : "Out of Stock";
+                    return [p.id, p.name, p.price, catName, stockStatus, p.size || "", p.material || "", p.desc || "", p.img, p.img2 || "", p.img3 || ""].map(escapeCSV).join(",");
+                });
+                const csvContent = "\uFEFF" + headers.join(",") + "\n" + rows.join("\n");
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url;
+                a.download = `speedgifts_inventory_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                showToast("Excel Exported!");
+            } catch (err) { showToast("Export Failed"); }
+        };
+
+        // NEW: UNIVERSAL MIGRATION LOGIC (FOR FUTURE DB SWITCHING)
+        window.copyUniversalJSON = () => {
+            try {
+                const universalBackup = {
+                    metadata: {
+                        source: "Speed Gifts Boutique UI",
+                        version: "2.5.0",
+                        exportDate: new Date().toISOString(),
+                        schema: {
+                            products: ["id", "name", "price", "catId", "stockStatus", "size", "material", "description", "images"],
+                            categories: ["id", "name", "iconUrl"]
+                        }
+                    },
+                    categories: DATA.c.map(c => ({ id: c.id, name: c.name, iconUrl: c.img })),
+                    products: DATA.p.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        price: p.price,
+                        catId: p.catId,
+                        stockStatus: p.inStock !== false ? "instock" : "outofstock",
+                        specs: { size: p.size || "", material: p.material || "" },
+                        description: p.desc || "",
+                        images: [p.img, p.img2, p.img3].filter(u => u && u !== 'img/')
+                    }))
+                };
+                
+                const jsonStr = JSON.stringify(universalBackup, null, 2);
+                const textArea = document.createElement("textarea");
+                textArea.value = jsonStr;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast("Universal Migration JSON Copied!");
+            } catch (err) { showToast("Migration Prep Failed"); }
+        };
+
         window.importData = (event) => {
             const file = event.target.files[0];
             if (!file) return;
             if (!confirm("This will add items from backup to current project. Continue?")) return;
-            
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
                     const data = JSON.parse(e.target.result);
                     showToast("Restoring... Please Wait");
-                    
-                    // Upload Categories
-                    if (data.categories) {
-                        for (const cat of data.categories) {
-                            const { id, ...cleanCat } = cat; // Remove old IDs
-                            await addDoc(catCol, cleanCat);
-                        }
-                    }
-                    
-                    // Upload Products
-                    if (data.products) {
-                        for (const prod of data.products) {
-                            const { id, ...cleanProd } = prod; // Remove old IDs
-                            await addDoc(prodCol, cleanProd);
-                        }
-                    }
-                    
-                    showToast("Restore Successful!");
-                    refreshData();
-                } catch (err) { showToast("Import Failed: Invalid File"); }
+                    if (data.categories) { for (const cat of data.categories) { const { id, ...cleanCat } = cat; await addDoc(catCol, cleanCat); } }
+                    if (data.products) { for (const prod of data.products) { const { id, ...cleanProd } = prod; await addDoc(prodCol, cleanProd); } }
+                    showToast("Restore Successful!"); refreshData();
+                } catch (err) { showToast("Import Failed"); }
             };
             reader.readAsText(file);
         };
@@ -838,14 +922,6 @@
             } 
             updateSelectionBar(); 
         };
-
-        function updateSelectionBar() {
-            const bar = document.getElementById('selection-bar');
-            const count = document.getElementById('selected-count');
-            if (!bar) return;
-            if (state.selected.length > 0 && !state.selectionId && state.filter !== 'wishlist') { bar.style.display = 'flex'; bar.classList.add('animate-selection'); if (count) count.innerText = `${state.selected.length} items`; } 
-            else { bar.style.display = 'none'; bar.classList.remove('animate-selection'); }
-        }
 
         window.clearSelection = () => { state.selected = []; state.selectionId = null; renderHome(); };
 
