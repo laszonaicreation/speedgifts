@@ -488,6 +488,44 @@
         .zoom-img-container:hover img {
             transform: scale(2);
         }
+
+        /* FULL SCREEN OVERLAY */
+        #img-full-preview {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            cursor: zoom-out;
+        }
+
+        #img-full-preview img {
+            max-width: 95vw;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .close-preview-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
     </style>
 </head>
 
@@ -495,6 +533,12 @@
 
     <div id="toast"
         class="bg-black text-white px-8 py-4 rounded-xl shadow-2xl text-[10px] font-black tracking-widest uppercase">
+    </div>
+
+    <!-- FULL SCREEN PREVIEW OVERLAY -->
+    <div id="img-full-preview" onclick="closeFullScreen()">
+        <div class="close-preview-btn">✕</div>
+        <img id="full-preview-img" src="" alt="Premium Preview">
     </div>
 
     <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-50">
@@ -1062,7 +1106,7 @@
                     </button>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
                         <div>
-                            <div class="zoom-img-container aspect-square" onmousemove="handleZoom(event, this)" onmouseleave="resetZoom(this)">
+                            <div class="zoom-img-container aspect-square" onmousemove="handleZoom(event, this)" onmouseleave="resetZoom(this)" onclick="openFullScreen('${p.img}')">
                                 <img src="${p.img}" id="main-detail-img" class="w-full h-full object-cover">
                             </div>
                             <div class="thumb-grid justify-center lg:justify-start">
@@ -1285,7 +1329,16 @@
             window.open(`https://wa.me/971561010387?text=${encodeURIComponent(msg)}`);
         };
 
-        window.switchImg = (src, el) => { const main = document.getElementById('main-detail-img'); if (main) main.src = src; document.querySelectorAll('.thumb-box').forEach(x => x.classList.remove('active')); if (el) el.classList.add('active'); };
+        window.switchImg = (src, el) => {
+            const main = document.getElementById('main-detail-img');
+            if (main) {
+                main.src = src;
+                // Update click handler for full-screen preview
+                main.closest('.zoom-img-container').setAttribute('onclick', `openFullScreen('${src}')`);
+            }
+            document.querySelectorAll('.thumb-box').forEach(x => x.classList.remove('active'));
+            if (el) el.classList.add('active');
+        };
 
         window.handleZoom = (e, container) => {
             const img = container.querySelector('img');
@@ -1298,6 +1351,24 @@
         window.resetZoom = (container) => {
             const img = container.querySelector('img');
             img.style.transformOrigin = `center center`;
+        };
+
+        window.openFullScreen = (src) => {
+            const overlay = document.getElementById('img-full-preview');
+            const fullImg = document.getElementById('full-preview-img');
+            if (overlay && fullImg) {
+                fullImg.src = src;
+                overlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        window.closeFullScreen = () => {
+            const overlay = document.getElementById('img-full-preview');
+            if (overlay) {
+                overlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
         };
 
         window.renderAdminUI = () => {
