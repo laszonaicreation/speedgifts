@@ -138,43 +138,82 @@
 
         .category-item {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 10px;
             flex-shrink: 0;
             cursor: pointer;
-            padding: 8px 16px 8px 8px;
-            border-radius: 100px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 0, 0, 0.03);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 75px;
+            gap: 8px;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
-        .category-circle {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            overflow: hidden;
+        .category-img-box {
+            width: 66px;
+            height: 66px;
+            border-radius: 20px;
+            padding: 3px;
             background: #fff;
             border: 1px solid rgba(0, 0, 0, 0.05);
-            flex-shrink: 0;
-            transition: transform 0.4s ease;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .active.category-item {
-            background: #111;
-            border-color: #111;
-            transform: scale(1.05);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        .category-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+            transition: transform 0.6s ease;
         }
 
-        .active .category-label {
-            color: #fff;
+        /* PREMIUM GOLD BREATHING ANIMATION WITH WHITE GAP */
+        @keyframes goldBreathing {
+            0% {
+                box-shadow: 0 0 0 3px #fff, 0 0 0 4px #111;
+                transform: translateY(-6px);
+            }
+
+            50% {
+                box-shadow: 0 0 0 3px #fff, 0 0 0 4.5px #D4AF37;
+                transform: translateY(-8px);
+            }
+
+            100% {
+                box-shadow: 0 0 0 3px #fff, 0 0 0 4px #111;
+                transform: translateY(-6px);
+            }
         }
 
-        .active .category-circle {
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: scale(0.9);
+        .active.category-item .category-img-box {
+            animation: goldBreathing 3s infinite ease-in-out;
+            border-color: transparent;
+            /* Hide direct border when active to show the gap shadow */
+        }
+
+        .active.category-item .category-img-box img {
+            transform: scale(1.1);
+        }
+
+        .active.category-item .category-label {
+            color: #111;
+            font-weight: 900;
+            position: relative;
+        }
+
+        .active.category-item .category-label::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: #D4AF37;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
         }
 
         /* PREMIUM BUTTON ANIMATION (GOLD/BLACK LINE EFFECT) */
@@ -201,13 +240,14 @@
         }
 
         .category-label {
-            font-size: 10px;
-            font-weight: 800;
+            font-size: 8.5px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.07em;
-            color: #333;
-            white-space: nowrap;
-            transition: color 0.3s ease;
+            letter-spacing: 0.1em;
+            color: #888;
+            text-align: center;
+            max-width: 100%;
+            transition: all 0.3s ease;
         }
 
         .img-container {
@@ -226,7 +266,28 @@
             transition: transform 1.2s ease;
         }
 
-        /* MOBILE HIDE SELECTION UI */
+        /* SEARCH TAGS */
+        .search-tag {
+            padding: 6px 12px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 100px;
+            font-size: 8px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #666;
+            cursor: pointer;
+            transition: 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .search-tag:hover {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+            transform: translateY(-2px);
+        }
+
         @media (max-width: 767px) {
             .select-btn {
                 display: none !important;
@@ -566,16 +627,54 @@
         </div>
     </nav>
 
+    <div id="loader" class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center">
+        <div class="w-6 h-6 border-2 border-gray-100 border-t-black rounded-full animate-spin"></div>
+        <p class="mt-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 animate-pulse">Loading Speed
+            Gifts Catalogue</p>
+    </div>
+
     <main id="app" class="max-w-7xl mx-auto px-5 pt-4 pb-48 min-h-screen">
-        <div id="loader" class="flex flex-col items-center justify-center py-64">
-            <div class="w-6 h-6 border-2 border-gray-100 border-t-black rounded-full animate-spin"></div>
-            <p class="mt-6 text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 animate-pulse">Loading Speed
-                Gifts Catalogue</p>
-        </div>
+        <!-- Unified App Container -->
     </main>
 
     <!-- Templates -->
     <div id="home-view-template" class="hidden">
+        <div id="customer-search-container" class="mb-10 fade-in relative">
+            <div class="max-w-2xl mx-auto z-[60]">
+                <!-- Search Input with its own relative wrapper to keep the icon fixed -->
+                <div class="relative group">
+                    <i
+                        class="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 text-sm transition-colors group-focus-within:text-black"></i>
+                    <input type="text" id="customer-search" oninput="window.applyCustomerSearch(this.value)"
+                        onfocus="window.showSearchSuggestions(true)" onblur="window.showSearchSuggestions(false)"
+                        class="w-full bg-white border border-gray-100 rounded-[2rem] py-5 pl-14 pr-14 text-[10px] md:text-[11px] font-bold uppercase tracking-widest outline-none focus:border-black transition-all shadow-[0_10px_30px_rgba(0,0,0,0.02)]"
+                        placeholder="Search our collection..." autocomplete="off">
+                    <!-- CLEAR SEARCH BUTTON -->
+                    <button id="clear-search-btn" onclick="window.clearCustomerSearch()"
+                        class="hidden absolute right-5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-black hover:bg-gray-100 transition-all">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- TRENDING DROPDOWN - Now Relative to push content instead of overlapping -->
+                <div id="search-tags"
+                    class="hidden w-full mt-4 p-4 bg-gray-50/50 rounded-3xl border border-gray-100 transition-all duration-500 overflow-hidden">
+                    <p class="text-[8px] font-black uppercase tracking-[0.2em] text-gray-300 mb-3 px-1">Trending
+                        Searches</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span onmousedown="window.applyCustomerSearch('Wood Engraving')"
+                            class="search-tag !bg-white">Wood Engraving</span>
+                        <span onmousedown="window.applyCustomerSearch('Rock Engraving')"
+                            class="search-tag !bg-white">Rock Engraving</span>
+                        <span onmousedown="window.applyCustomerSearch('Cushion')" class="search-tag !bg-white">Cushion
+                            Printing</span>
+                        <span onmousedown="window.applyCustomerSearch('Magic Mug')" class="search-tag !bg-white">Magic
+                            Mug</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="selection-header" class="hidden mb-10 fade-in">
             <div class="flex flex-col gap-4 border-b border-gray-100 pb-8">
                 <div class="space-y-1">
@@ -692,8 +791,10 @@
                                     class="w-full bg-transparent outline-none text-sm font-semibold" value="img/"
                                     placeholder="Image Path 3">
                             </div>
-                            <textarea id="p-desc" rows="4" class="admin-input"
-                                placeholder="Product description..."></textarea>
+                            <input type="text" id="p-keywords" class="admin-input mt-4 !bg-white"
+                                placeholder="Search Keywords (Secret - Hidden from customers)">
+                            <textarea id="p-desc" class="admin-input h-32 py-4 resize-none"
+                                placeholder="Product Description"></textarea>
                             <button onclick="saveProduct()" id="p-save-btn"
                                 class="w-full bg-black text-white py-5 rounded-2xl font-bold text-[11px] uppercase tracking-widest shadow-2 mt-4">Sync
                                 Product</button>
@@ -797,7 +898,7 @@
         const shareCol = collection(db, 'artifacts', appId, 'public', 'data', 'selections');
 
         let DATA = { p: [], c: [] };
-        let state = { filter: 'all', sort: 'all', user: null, selected: [], wishlist: [], selectionId: null, scrollPos: 0 };
+        let state = { filter: 'all', sort: 'all', search: '', user: null, selected: [], wishlist: [], selectionId: null, scrollPos: 0 };
         let clicks = 0, lastClickTime = 0;
 
         const startSync = async () => {
@@ -843,6 +944,15 @@
         window.onpopstate = () => {
             refreshData(true);
         };
+
+        // GLOBAL SAFETY: Hide loader no matter what after 6 seconds
+        setTimeout(() => {
+            const loader = document.getElementById('loader');
+            if (loader && loader.style.display !== 'none') {
+                console.warn("Safety loader hide triggered.");
+                loader.style.display = 'none';
+            }
+        }, 6000);
 
         async function loadWishlist() {
             if (!state.user) return;
@@ -898,18 +1008,22 @@
                 const isAdminOpen = !document.getElementById('admin-panel').classList.contains('hidden');
 
                 if (!isAdminOpen) {
-                    if (prodId && DATA.p.length > 0) viewDetail(prodId, true);
-                    else if (shareId) {
-                        const selDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'selections', shareId));
-                        if (selDoc.exists()) {
-                            state.selectionId = shareId;
-                            state.selected = selDoc.data().ids;
-                            renderHome();
-                        }
-                    } else renderHome();
+                    if (prodId && DATA.p.length > 0) {
+                        viewDetail(prodId, true);
+                    } else if (shareId) {
+                        try {
+                            const selDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'selections', shareId));
+                            if (selDoc.exists()) {
+                                state.selectionId = shareId;
+                                state.selected = selDoc.data().ids;
+                            }
+                        } catch (e) { console.error("Selection sync failed"); }
+                        renderHome();
+                    } else {
+                        renderHome();
+                    }
                 } else {
-                    const appArea = document.getElementById('app');
-                    if (appArea.querySelector('#product-grid')) renderHome();
+                    renderHome();
                 }
 
                 populateCatSelect();
@@ -917,34 +1031,19 @@
                 renderAdminUI();
 
                 const loader = document.getElementById('loader');
-                if (loader && loader.style.display !== 'none') {
-                    const safetyTimer = setTimeout(() => { loader.style.display = 'none'; }, 4000);
+                if (loader) {
+                    const safetyTimer = setTimeout(() => { loader.style.display = 'none'; }, 5000);
+                    // Preload Icons
                     const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/');
                     if (iconsToLoad.length > 0) {
                         await Promise.all(iconsToLoad.map(url => new Promise((resolve) => {
                             const img = new Image(); img.src = url;
-                            img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
-                            img.onerror = resolve;
+                            img.onload = resolve; img.onerror = resolve;
                             setTimeout(resolve, 2000);
                         })));
                     }
-                    let initialImages = [];
-                    if (prodId) {
-                        const p = DATA.p.find(x => x.id === prodId);
-                        if (p) initialImages = [p.img, p.img2, p.img3].filter(u => u && u !== 'img/');
-                    } else {
-                        initialImages = DATA.p.filter(p => p.inStock !== false).slice(0, 8).map(p => p.img);
-                    }
-                    if (initialImages.length > 0) {
-                        await Promise.all(initialImages.map(url => new Promise((resolve) => {
-                            const img = new Image(); img.src = url;
-                            img.onload = () => { if ('decode' in img) img.decode().then(resolve).catch(resolve); else resolve(); };
-                            img.onerror = resolve;
-                            setTimeout(resolve, 3000);
-                        })));
-                    }
                     clearTimeout(safetyTimer);
-                    setTimeout(() => { loader.style.display = 'none'; }, 100);
+                    loader.style.display = 'none';
                 }
             } catch (err) {
                 console.error(err);
@@ -1007,86 +1106,130 @@
         };
 
         function renderHome() {
-            const appMain = document.getElementById('app');
-            const template = document.getElementById('home-view-template');
-            if (!appMain || !template) return;
-            appMain.innerHTML = template.innerHTML;
-            const catRow = document.getElementById('category-row');
-            const grid = document.getElementById('product-grid');
-            const selectionHeader = document.getElementById('selection-header');
-            const viewTitle = document.getElementById('view-title');
-            const viewSubtitle = document.getElementById('view-subtitle');
-            const selectAllBtn = document.getElementById('select-all-btn');
-            const activeCatTitle = document.getElementById('active-category-title');
-            const activeCatTitleMob = document.getElementById('active-category-title-mob');
-            const categorySelector = document.getElementById('category-selector-container');
-            if (state.selectionId) {
-                if (selectionHeader) selectionHeader.classList.remove('hidden');
-                if (catRow) catRow.classList.add('hidden');
-                if (categorySelector) categorySelector.classList.add('hidden');
-                if (viewTitle) viewTitle.innerText = "Shared Selection";
-                if (viewSubtitle) viewSubtitle.innerText = "Specially picked items for you.";
-            } else if (state.filter === 'wishlist') {
-                if (selectionHeader) selectionHeader.classList.remove('hidden');
-                if (catRow) catRow.classList.add('hidden');
-                if (categorySelector) categorySelector.classList.add('hidden');
-                if (viewTitle) viewTitle.innerText = "Your Favorites";
-                if (viewSubtitle) viewSubtitle.innerText = "Items you've saved to your favorites.";
-            } else {
-                let cHtml = `<div class="category-item ${state.filter === 'all' ? 'active' : ''}" onclick="applyFilter('all')"><div class="category-circle flex items-center justify-center bg-gray-50 text-[8px] font-black text-gray-400">All</div><p class="category-label">Explore</p></div>`;
-                DATA.c.forEach(c => {
-                    cHtml += `<div class="category-item ${state.filter === c.id ? 'active' : ''}" onclick="applyFilter('${c.id}')"><div class="category-circle"><img src="${c.img}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100?text=Gift'"></div><p class="category-label">${c.name}</p></div>`;
-                });
-                if (catRow) catRow.innerHTML = cHtml;
-            }
-            let filtered = [];
-            const stockFilter = (items) => items.filter(p => p.inStock !== false);
-            if (state.selectionId) filtered = DATA.p.filter(p => state.selected.includes(p.id));
-            else if (state.filter === 'wishlist') filtered = DATA.p.filter(p => state.wishlist.includes(p.id));
-            else if (state.filter !== 'all') filtered = stockFilter(DATA.p.filter(p => p.catId === state.filter));
-            else filtered = stockFilter(DATA.p);
+            try {
+                const appMain = document.getElementById('app');
+                const template = document.getElementById('home-view-template');
+                if (!appMain || !template) return;
 
-            if (state.sort !== 'all') {
-                filtered.sort((a, b) => {
-                    const priceA = parseFloat(a.price) || 0;
-                    const priceB = parseFloat(b.price) || 0;
-                    return state.sort === 'low' ? priceA - priceB : priceB - priceA;
-                });
-            }
-            let catNameDisplay = "All Collections";
-            if (state.selectionId) catNameDisplay = "Shared Selection";
-            else if (state.filter === 'wishlist') catNameDisplay = "Favorites List";
-            else if (state.filter !== 'all') {
-                const catObj = DATA.c.find(c => c.id === state.filter);
-                if (catObj) catNameDisplay = catObj.name;
-            }
-            if (activeCatTitle) activeCatTitle.innerText = catNameDisplay;
-            if (activeCatTitleMob) activeCatTitleMob.innerText = catNameDisplay;
-            if (selectAllBtn) {
-                const visibleIds = filtered.map(p => p.id);
-                const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => state.selected.includes(id));
-                selectAllBtn.innerText = allVisibleSelected ? "Deselect Visible" : "Select Visible Items";
-                if (state.selectionId) selectAllBtn.parentElement.classList.add('hidden');
-            }
-            if (grid) {
-                grid.innerHTML = filtered.map((p, idx) => `
-                    <div class="product-card group fade-in ${state.selected.includes(p.id) ? 'selected' : ''} ${state.wishlist.includes(p.id) ? 'wish-active' : ''}" onclick="viewDetail('${p.id}')">
-                        <div class="wish-btn shadow-sm" onclick="toggleWishlist(event, '${p.id}')"><i class="fa-solid fa-heart text-[10px]"></i></div>
-                        ${!state.selectionId && !state.filter.includes('wishlist') ? `<div class="select-btn shadow-sm" onclick="toggleSelect(event, '${p.id}')"><i class="fa-solid fa-check text-[10px]"></i></div>` : ''}
-                        <div class="img-container mb-4 shadow-sm"><img src="${p.img}" ${idx > 8 ? 'loading="lazy"' : ''}></div>
-                        <div class="px-1 text-left">
-                            <h3 class="capitalize truncate leading-none text-gray-900 font-semibold">${p.name}</h3>
-                            <p class="price-tag mt-2 font-bold">${p.price} AED</p>
+                // Simple check: If product grid is absent, load the template
+                // This ensures we always have the UI structure.
+                if (!appMain.querySelector('#product-grid')) {
+                    appMain.innerHTML = template.innerHTML;
+                }
+
+                // SELECT ALL ELEMENTS AFTER INJECTION
+                const catRow = appMain.querySelector('#category-row');
+                const grid = appMain.querySelector('#product-grid');
+                const selectionHeader = appMain.querySelector('#selection-header');
+                const viewTitle = appMain.querySelector('#view-title');
+                const viewSubtitle = appMain.querySelector('#view-subtitle');
+                const selectAllBtn = appMain.querySelector('#select-all-btn');
+                const activeCatTitle = appMain.querySelector('#active-category-title');
+                const activeCatTitleMob = appMain.querySelector('#active-category-title-mob');
+                const categorySelector = appMain.querySelector('#category-selector-container');
+                const discSearch = appMain.querySelector('#customer-search');
+                const clearBtn = appMain.querySelector('#clear-search-btn');
+                const mobileSort = appMain.querySelector('#price-sort-mob');
+
+                // 1. Handle selection/wishlist headers
+                if (state.selectionId) {
+                    if (selectionHeader) selectionHeader.classList.remove('hidden');
+                    if (catRow) catRow.classList.add('hidden');
+                    if (categorySelector) categorySelector.classList.add('hidden');
+                    if (viewTitle) viewTitle.innerText = "Shared Selection";
+                    if (viewSubtitle) viewSubtitle.innerText = "Specially picked items for you.";
+                } else if (state.filter === 'wishlist') {
+                    if (selectionHeader) selectionHeader.classList.remove('hidden');
+                    if (catRow) catRow.classList.add('hidden');
+                    if (categorySelector) categorySelector.classList.add('hidden');
+                    if (viewTitle) viewTitle.innerText = "Your Favorites";
+                    if (viewSubtitle) viewSubtitle.innerText = "Items you've saved to your favorites.";
+                } else {
+                    if (selectionHeader) selectionHeader.classList.add('hidden');
+                    if (catRow) catRow.classList.remove('hidden');
+                    if (categorySelector) categorySelector.classList.remove('hidden');
+
+                    let cHtml = `<div class="category-item ${state.filter === 'all' ? 'active' : ''}" onclick="applyFilter('all')"><div class="category-img-box flex items-center justify-center bg-gray-50 text-[10px] font-black text-gray-300">All</div><p class="category-label">Explore</p></div>`;
+                    DATA.c.forEach(c => {
+                        cHtml += `<div class="category-item ${state.filter === c.id ? 'active' : ''}" onclick="applyFilter('${c.id}')"><div class="category-img-box"><img src="${c.img}" onerror="this.src='https://placehold.co/100x100?text=Gift'"></div><p class="category-label truncate px-1 w-full">${c.name}</p></div>`;
+                    });
+                    if (catRow) catRow.innerHTML = cHtml;
+                }
+                let filtered = [];
+                const stockFilter = (items) => items.filter(p => p.inStock !== false);
+                if (state.selectionId) filtered = DATA.p.filter(p => state.selected.includes(p.id));
+                else if (state.filter === 'wishlist') filtered = DATA.p.filter(p => state.wishlist.includes(p.id));
+                else if (state.filter !== 'all') filtered = stockFilter(DATA.p.filter(p => p.catId === state.filter));
+                else filtered = stockFilter(DATA.p);
+
+                if (state.search) {
+                    const q = state.search.toLowerCase().trim();
+                    const words = q.split(' ').filter(w => w.length > 0);
+
+                    let source = (state.selectionId || state.filter === 'wishlist') ? filtered : stockFilter(DATA.p);
+
+                    filtered = source.filter(p => {
+                        const name = (p.name || '').toLowerCase();
+                        const keywords = (p.keywords || '').toLowerCase();
+                        const catObj = DATA.c.find(c => c.id === p.catId);
+                        const catName = catObj ? catObj.name.toLowerCase() : '';
+
+                        // Match if ALL search words are found in name OR category OR keywords
+                        return words.every(word => name.includes(word) || catName.includes(word) || keywords.includes(word));
+                    });
+                }
+
+                if (state.sort !== 'all') {
+                    filtered.sort((a, b) => {
+                        const priceA = parseFloat(a.price) || 0;
+                        const priceB = parseFloat(b.price) || 0;
+                        return state.sort === 'low' ? priceA - priceB : priceB - priceA;
+                    });
+                }
+                let catNameDisplay = "All Collections";
+                if (state.selectionId) catNameDisplay = "Shared Selection";
+                else if (state.filter === 'wishlist') catNameDisplay = "Favorites List";
+                else if (state.filter !== 'all') {
+                    const catObj = DATA.c.find(c => c.id === state.filter);
+                    if (catObj) catNameDisplay = catObj.name;
+                }
+                if (activeCatTitle) activeCatTitle.innerText = catNameDisplay;
+                if (activeCatTitleMob) activeCatTitleMob.innerText = catNameDisplay;
+                if (selectAllBtn) {
+                    const visibleIds = filtered.map(p => p.id);
+                    const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => state.selected.includes(id));
+                    selectAllBtn.innerText = allVisibleSelected ? "Deselect Visible" : "Select Visible Items";
+                    if (state.selectionId) selectAllBtn.parentElement?.classList.add('hidden');
+                }
+                if (grid) {
+                    grid.innerHTML = filtered.map((p, idx) => `
+                        <div class="product-card group fade-in ${state.selected.includes(p.id) ? 'selected' : ''} ${state.wishlist.includes(p.id) ? 'wish-active' : ''}" onclick="viewDetail('${p.id}')">
+                            <div class="wish-btn shadow-sm" onclick="toggleWishlist(event, '${p.id}')"><i class="fa-solid fa-heart text-[10px]"></i></div>
+                            ${!state.selectionId && !state.filter.includes('wishlist') ? `<div class="select-btn shadow-sm" onclick="toggleSelect(event, '${p.id}')"><i class="fa-solid fa-check text-[10px]"></i></div>` : ''}
+                            <div class="img-container mb-4 shadow-sm"><img src="${p.img}" ${idx > 8 ? 'loading="lazy"' : ''}></div>
+                            <div class="px-1 text-left">
+                                <h3 class="capitalize truncate leading-none text-gray-900 font-semibold">${p.name}</h3>
+                                <p class="price-tag mt-2 font-bold">${p.price} AED</p>
+                            </div>
                         </div>
-                    </div>
-                `).join('') || `<p class="col-span-full text-center py-40 text-gray-300 italic text-[11px]">No items found.</p>`;
-            }
+                    `).join('') || `<p class="col-span-full text-center py-40 text-gray-300 italic text-[11px]">No items found.</p>`;
+                }
 
-            const mobileSort = document.getElementById('price-sort-mob');
-            if (mobileSort) mobileSort.value = state.sort;
-            updateSelectionBar();
-            if (!state.selectionId && state.filter !== 'wishlist') window.scrollTo({ top: state.scrollPos });
-            else window.scrollTo({ top: 0 });
+                // 5. Update Search & Sort UI
+                if (discSearch && discSearch !== document.activeElement) discSearch.value = state.search;
+                if (clearBtn) {
+                    if (state.search) clearBtn.classList.remove('hidden');
+                    else clearBtn.classList.add('hidden');
+                }
+                if (mobileSort) mobileSort.value = state.sort;
+
+                updateSelectionBar();
+                if (!state.selectionId && state.filter !== 'wishlist' && !state.search) window.scrollTo({ top: state.scrollPos });
+                else if (!state.search) window.scrollTo({ top: 0 });
+            } catch (e) {
+                console.error("Render Error:", e);
+                showToast("UI Display Error");
+            }
         }
 
         // NEW: updateSelectionBar logic explicitly added to prevent ReferenceError
@@ -1170,23 +1313,36 @@
         };
 
         window.saveProduct = async () => {
-            const id = document.getElementById('edit-id').value;
+            const id = document.getElementById('edit-id')?.value;
             const btn = document.getElementById('p-save-btn');
-            const data = { name: document.getElementById('p-name').value, price: document.getElementById('p-price').value, size: document.getElementById('p-size').value, material: document.getElementById('p-material').value, inStock: document.getElementById('p-stock').checked, img: document.getElementById('p-img').value, img2: document.getElementById('p-img2').value, img3: document.getElementById('p-img3').value, catId: document.getElementById('p-cat-id').value, desc: document.getElementById('p-desc').value, updatedAt: Date.now() };
+            const data = {
+                name: document.getElementById('p-name')?.value,
+                price: document.getElementById('p-price')?.value,
+                size: document.getElementById('p-size')?.value,
+                material: document.getElementById('p-material')?.value,
+                inStock: document.getElementById('p-stock')?.checked,
+                img: document.getElementById('p-img')?.value,
+                img2: document.getElementById('p-img2')?.value,
+                img3: document.getElementById('p-img3')?.value,
+                catId: document.getElementById('p-cat-id')?.value,
+                desc: document.getElementById('p-desc')?.value,
+                keywords: document.getElementById('p-keywords')?.value,
+                updatedAt: Date.now()
+            };
             if (!data.name || !data.img) return showToast("Required info missing");
-            btn.disabled = true; btn.innerText = "Syncing...";
+            if (btn) { btn.disabled = true; btn.innerText = "Syncing..."; }
             try { if (id) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id), data); else await addDoc(prodCol, data); showToast("Synced Successfully"); resetForm(); DATA.p = []; refreshData(); }
-            catch (e) { showToast("Save Error"); } finally { btn.disabled = false; btn.innerText = "Sync Product"; }
+            catch (e) { showToast("Save Error"); } finally { if (btn) { btn.disabled = false; btn.innerText = "Sync Product"; } }
         };
 
         window.saveCategory = async () => {
-            const id = document.getElementById('edit-cat-id').value;
+            const id = document.getElementById('edit-cat-id')?.value;
             const btn = document.getElementById('c-save-btn');
-            const data = { name: document.getElementById('c-name').value, img: document.getElementById('c-img').value };
+            const data = { name: document.getElementById('c-name')?.value, img: document.getElementById('c-img')?.value };
             if (!data.name) return showToast("Name required");
-            btn.disabled = true; btn.innerText = "Syncing...";
+            if (btn) { btn.disabled = true; btn.innerText = "Syncing..."; }
             try { if (id) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'categories', id), data); else await addDoc(catCol, data); showToast("Category Synced"); resetForm(); DATA.p = []; refreshData(); }
-            catch (e) { showToast("Category Error"); } finally { btn.disabled = false; btn.innerText = "Sync Category"; }
+            catch (e) { showToast("Category Error"); } finally { if (btn) { btn.disabled = false; btn.innerText = "Sync Category"; } }
         };
 
         window.deleteProduct = async (id) => { if (!confirm("Are you sure?")) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id)); showToast("Deleted"); refreshData(); } catch (e) { showToast("Delete Error"); } };
@@ -1195,18 +1351,33 @@
         window.editProduct = (id) => {
             const item = DATA.p.find(x => x.id === id);
             if (!item) return;
-            document.getElementById('edit-id').value = item.id;
-            document.getElementById('p-name').value = item.name;
-            document.getElementById('p-price').value = item.price;
-            document.getElementById('p-size').value = item.size || "";
-            document.getElementById('p-material').value = item.material || "";
-            document.getElementById('p-stock').checked = item.inStock !== false;
-            document.getElementById('p-img').value = item.img;
-            document.getElementById('p-img2').value = item.img2 || "img/";
-            document.getElementById('p-img3').value = item.img3 || "img/";
-            document.getElementById('p-cat-id').value = item.catId;
-            document.getElementById('p-desc').value = item.desc;
-            document.getElementById('p-form-title').innerText = "Editing: " + item.name;
+            const editId = document.getElementById('edit-id');
+            const pName = document.getElementById('p-name');
+            const pPrice = document.getElementById('p-price');
+            const pSize = document.getElementById('p-size');
+            const pMaterial = document.getElementById('p-material');
+            const pStock = document.getElementById('p-stock');
+            const pImg = document.getElementById('p-img');
+            const pImg2 = document.getElementById('p-img2');
+            const pImg3 = document.getElementById('p-img3');
+            const pCatId = document.getElementById('p-cat-id');
+            const pDesc = document.getElementById('p-desc');
+            const pKeywords = document.getElementById('p-keywords');
+            const pFormTitle = document.getElementById('p-form-title');
+
+            if (editId) editId.value = item.id;
+            if (pName) pName.value = item.name;
+            if (pPrice) pPrice.value = item.price;
+            if (pSize) pSize.value = item.size || "";
+            if (pMaterial) pMaterial.value = item.material || "";
+            if (pStock) pStock.checked = item.inStock !== false;
+            if (pImg) pImg.value = item.img;
+            if (pImg2) pImg2.value = item.img2 || "img/";
+            if (pImg3) pImg3.value = item.img3 || "img/";
+            if (pCatId) pCatId.value = item.catId;
+            if (pDesc) pDesc.value = item.desc;
+            if (pKeywords) pKeywords.value = item.keywords || "";
+            if (pFormTitle) pFormTitle.innerText = "Editing: " + item.name;
             switchAdminTab('products');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -1214,10 +1385,15 @@
         window.editCategory = (id) => {
             const item = DATA.c.find(x => x.id === id);
             if (!item) return;
-            document.getElementById('edit-cat-id').value = item.id;
-            document.getElementById('c-name').value = item.name;
-            document.getElementById('c-img').value = item.img;
-            document.getElementById('c-form-title').innerText = "Editing: " + item.name;
+            const editCatId = document.getElementById('edit-cat-id');
+            const cName = document.getElementById('c-name');
+            const cImg = document.getElementById('c-img');
+            const cFormTitle = document.getElementById('c-form-title');
+
+            if (editCatId) editCatId.value = item.id;
+            if (cName) cName.value = item.name;
+            if (cImg) cImg.value = item.img;
+            if (cFormTitle) cFormTitle.innerText = "Editing: " + item.name;
             switchAdminTab('categories');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -1227,7 +1403,7 @@
                 const backup = { products: DATA.p, categories: DATA.c, timestamp: Date.now() };
                 const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url;
+                const a = document.createElement('a'); if (!a) return; a.href = url;
                 a.download = `speedgifts_backup_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
                 document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
                 showToast("Backup Created!");
@@ -1247,7 +1423,7 @@
                 const csvContent = "\uFEFF" + headers.join(",") + "\n" + rows.join("\n");
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url;
+                const a = document.createElement('a'); if (!a) return; a.href = url;
                 a.download = `speedgifts_inventory_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
                 document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
                 showToast("Excel Exported!");
@@ -1263,8 +1439,7 @@
                         version: "2.5.0",
                         exportDate: new Date().toISOString(),
                         schema: {
-                            products: ["id", "name", "price", "catId", "stockStatus", "size", "material", "description", "images"],
-                            categories: ["id", "name", "iconUrl"]
+                            products: ["id", "name", "price", "catId", "stockStatus", "size", "material", "description", "images"]
                         }
                     },
                     categories: DATA.c.map(c => ({ id: c.id, name: c.name, iconUrl: c.img })),
@@ -1282,6 +1457,7 @@
 
                 const jsonStr = JSON.stringify(universalBackup, null, 2);
                 const textArea = document.createElement("textarea");
+                if (!textArea) return;
                 textArea.value = jsonStr;
                 document.body.appendChild(textArea);
                 textArea.select();
@@ -1326,7 +1502,18 @@
         window.shareSelection = async () => {
             if (state.selected.length === 0) return;
             showToast("Generating link...");
-            try { const docRef = await addDoc(shareCol, { ids: state.selected, createdAt: Date.now() }); const shareUrl = `${window.location.origin}${window.location.pathname}?s=${docRef.id}`; const textArea = document.createElement("textarea"); textArea.value = shareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); showToast("Secret Link Copied!"); }
+            try {
+                const docRef = await addDoc(shareCol, { ids: state.selected, createdAt: Date.now() });
+                const shareUrl = `${window.location.origin}${window.location.pathname}?s=${docRef.id}`;
+                const textArea = document.createElement("textarea");
+                if (!textArea) return;
+                textArea.value = shareUrl;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast("Secret Link Copied!");
+            }
             catch (e) { showToast("Sharing failed."); }
         };
 
@@ -1339,6 +1526,7 @@
 
         window.inquireOnWhatsApp = (id) => {
             const p = DATA.p.find(x => x.id === id);
+            if (!p) return;
             const pUrl = `${window.location.origin}${window.location.pathname}?p=${p.id}`;
             const msg = `*Inquiry regarding:* ${p.name}\n*Price:* ${p.price} AED\n\n*Product Link:* ${pUrl}\n\nPlease let me know the availability.`;
             window.open(`https://wa.me/971561010387?text=${encodeURIComponent(msg)}`);
@@ -1349,7 +1537,7 @@
             if (main) {
                 main.src = src;
                 // Update click handler for full-screen preview
-                main.closest('.zoom-img-container').setAttribute('onclick', `openFullScreen('${src}')`);
+                main.closest('.zoom-img-container')?.setAttribute('onclick', `openFullScreen('${src}')`);
             }
             document.querySelectorAll('.thumb-box').forEach(x => x.classList.remove('active'));
             if (el) el.classList.add('active');
@@ -1357,7 +1545,8 @@
 
         window.handleZoom = (e, container) => {
             // Only zoom if it's a mouse event and not a touch simulation that triggers click
-            const img = container.querySelector('img');
+            const img = container?.querySelector('img');
+            if (!img) return;
             const rect = container.getBoundingClientRect();
             const x = ((e.clientX - rect.left) / rect.width) * 100;
             const y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -1367,7 +1556,8 @@
         };
 
         window.resetZoom = (container) => {
-            const img = container.querySelector('img');
+            const img = container?.querySelector('img');
+            if (!img) return;
             img.style.transform = 'scale(1)';
             img.style.transformOrigin = `center center`;
         };
@@ -1421,7 +1611,43 @@
             cList.innerHTML = DATA.c.map(c => `<div class="flex items-center gap-5 p-5 bg-gray-50 rounded-[2rem] border border-gray-100"><img src="${c.img}" class="w-14 h-14 rounded-full object-cover border-4 border-white shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Icon'"><div class="flex-1 font-bold text-[13px] uppercase">${c.name}</div><div class="flex gap-2"><button onclick="editCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[10px]"></i></button><button onclick="deleteCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[10px]"></i></button></div></div>`).join('') || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No Categories</p>`;
         };
 
-        window.applyFilter = (id) => { state.filter = id; state.scrollPos = 0; renderHome(); };
+        window.applyFilter = (id) => { state.filter = id; state.search = ''; state.scrollPos = 0; renderHome(); };
+        window.showSearchSuggestions = (show) => {
+            const appMain = document.getElementById('app');
+            const tags = appMain ? appMain.querySelector('#search-tags') : null;
+            if (tags) {
+                if (show) tags.classList.remove('hidden');
+                else setTimeout(() => {
+                    const currentTags = document.getElementById('app')?.querySelector('#search-tags');
+                    if (currentTags) currentTags.classList.add('hidden');
+                }, 200);
+            }
+        };
+        let searchTimeout;
+        window.applyCustomerSearch = (val) => {
+            state.search = val;
+            if (val && state.filter !== 'wishlist' && !state.selectionId) {
+                state.filter = 'all';
+            }
+
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                renderHome();
+            }, 100);
+
+            // Update Clear Button UI immediately with safety
+            const clearBtn = document.getElementById('app')?.querySelector('#clear-search-btn');
+            if (clearBtn) {
+                if (val) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+        };
+        window.clearCustomerSearch = () => {
+            state.search = '';
+            renderHome();
+            const input = document.getElementById('customer-search');
+            if (input) input.focus();
+        };
         window.applyPriceSort = (sort) => { state.sort = sort; renderHome(); };
         window.showAdminPanel = () => { document.getElementById('admin-panel').classList.remove('hidden'); document.body.style.overflow = 'hidden'; renderAdminUI(); };
         window.hideAdminPanel = () => { document.getElementById('admin-panel').classList.add('hidden'); document.body.style.overflow = 'auto'; };
@@ -1449,7 +1675,7 @@
         }
 
         window.resetForm = () => {
-            const fields = ['edit-id', 'edit-cat-id', 'p-name', 'p-price', 'p-size', 'p-material', 'p-desc', 'c-name'];
+            const fields = ['edit-id', 'edit-cat-id', 'p-name', 'p-price', 'p-size', 'p-material', 'p-desc', 'p-keywords', 'c-name'];
             fields.forEach(f => { const el = document.getElementById(f); if (el) el.value = ""; });
             document.getElementById('p-img').value = "img/"; document.getElementById('p-img2').value = "img/"; document.getElementById('p-img3').value = "img/";
             document.getElementById('c-img').value = "img/";
