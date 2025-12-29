@@ -145,6 +145,8 @@
             width: 75px;
             gap: 8px;
             transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            position: relative;
+            /* Ensure offsetLeft is reliable */
         }
 
         .category-img-box {
@@ -264,6 +266,63 @@
             height: 100%;
             object-fit: cover;
             transition: transform 1.2s ease;
+        }
+
+        /* NEW USABILITY ENHANCEMENTS */
+        .category-scroll-container {
+            position: relative;
+            margin-bottom: 2.5rem;
+        }
+
+        .category-scroll-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 100%;
+            background: linear-gradient(to left, rgba(255, 255, 255, 0.9), transparent);
+            pointer-events: none;
+            z-index: 5;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .category-scroll-container.scrolled-end::after {
+            opacity: 0;
+        }
+
+        @keyframes scrollHint {
+            0% {
+                transform: translateX(0);
+            }
+
+            15% {
+                transform: translateX(-30px);
+            }
+
+            30% {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scrollHint {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .scroll-hint-active {
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4) !important;
+            border-color: #D4AF37 !important;
         }
 
         /* SEARCH TAGS */
@@ -693,8 +752,11 @@
                 Category</p>
         </div>
 
-        <div id="category-row"
-            class="no-scrollbar flex gap-4 overflow-x-auto py-8 items-center border-b border-gray-50 mb-10 px-1"></div>
+        <div class="category-scroll-container">
+            <div id="category-row"
+                class="no-scrollbar flex gap-4 overflow-x-auto py-8 items-center border-b border-gray-50 px-1 scroll-smooth"
+                onscroll="window.handleCategoryRowScroll(this)"></div>
+        </div>
 
         <div class="desktop-select-actions flex justify-between items-center mb-6 hidden md:flex">
             <h3 id="active-category-title"
@@ -1149,11 +1211,39 @@
                     if (catRow) catRow.classList.remove('hidden');
                     if (categorySelector) categorySelector.classList.remove('hidden');
 
-                    let cHtml = `<div class="category-item ${state.filter === 'all' ? 'active' : ''}" onclick="applyFilter('all')"><div class="category-img-box flex items-center justify-center bg-gray-50 text-[10px] font-black text-gray-300">All</div><p class="category-label">Explore</p></div>`;
+                    let cHtml = `<div class="category-item ${state.filter === 'all' ? 'active' : ''}" onclick="applyFilter('all', event)"><div class="category-img-box flex items-center justify-center bg-gray-50 text-[10px] font-black text-gray-300">All</div><p class="category-label">Explore</p></div>`;
                     DATA.c.forEach(c => {
-                        cHtml += `<div class="category-item ${state.filter === c.id ? 'active' : ''}" onclick="applyFilter('${c.id}')"><div class="category-img-box"><img src="${c.img}" onerror="this.src='https://placehold.co/100x100?text=Gift'"></div><p class="category-label truncate px-1 w-full">${c.name}</p></div>`;
+                        cHtml += `<div class="category-item ${state.filter === c.id ? 'active' : ''}" onclick="applyFilter('${c.id}', event)"><div class="category-img-box"><img src="${c.img}" onerror="this.src='https://placehold.co/100x100?text=Gift'"></div><p class="category-label truncate px-1 w-full">${c.name}</p></div>`;
                     });
-                    if (catRow) catRow.innerHTML = cHtml;
+                    if (catRow) {
+                        catRow.innerHTML = cHtml;
+
+                        // Wait for DOM to settle
+                        setTimeout(() => {
+                            // 1. Auto-scroll active item into view
+                            if (state.filter !== 'all') {
+                                const activeItem = catRow.querySelector('.category-item.active');
+                                if (activeItem) {
+                                    // Calculate relative offset within the row
+                                    const scrollOffset = activeItem.offsetLeft - catRow.scrollLeft;
+                                    // We want it at the start, so we adjust current scroll
+                                    catRow.scrollTo({ left: catRow.scrollLeft + (activeItem.getBoundingClientRect().left - catRow.getBoundingClientRect().left) - 16, behavior: 'smooth' });
+                                }
+                            }
+
+                            // 2. Add hint animation on first load if on mobile and scrollable
+                            const isScrollable = catRow.scrollWidth > catRow.clientWidth;
+                            if (isScrollable && !window.sessionStorage.getItem('cat_hint_done') && window.innerWidth < 768) {
+                                setTimeout(() => {
+                                    catRow.scrollTo({ left: 100, behavior: 'smooth' });
+                                    setTimeout(() => {
+                                        catRow.scrollTo({ left: 0, behavior: 'smooth' });
+                                        window.sessionStorage.setItem('cat_hint_done', 'true');
+                                    }, 700);
+                                }, 1000);
+                            }
+                        }, 100);
+                    }
                 }
                 let filtered = [];
                 const stockFilter = (items) => items.filter(p => p.inStock !== false);
@@ -1611,7 +1701,20 @@
             cList.innerHTML = DATA.c.map(c => `<div class="flex items-center gap-5 p-5 bg-gray-50 rounded-[2rem] border border-gray-100"><img src="${c.img}" class="w-14 h-14 rounded-full object-cover border-4 border-white shadow-sm" onerror="this.src='https://placehold.co/100x100?text=Icon'"><div class="flex-1 font-bold text-[13px] uppercase">${c.name}</div><div class="flex gap-2"><button onclick="editCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-lg text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[10px]"></i></button><button onclick="deleteCategory('${c.id}')" class="w-10 h-10 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[10px]"></i></button></div></div>`).join('') || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No Categories</p>`;
         };
 
-        window.applyFilter = (id) => { state.filter = id; state.search = ''; state.scrollPos = 0; renderHome(); };
+        window.handleCategoryRowScroll = (el) => {
+            const container = el.parentElement;
+            if (!container) return;
+            const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 10;
+            if (isAtEnd) container.classList.add('scrolled-end');
+            else container.classList.remove('scrolled-end');
+        };
+
+        window.applyFilter = (id) => {
+            state.filter = id;
+            state.search = '';
+            state.scrollPos = 0;
+            renderHome();
+        };
         window.showSearchSuggestions = (show) => {
             const appMain = document.getElementById('app');
             const tags = appMain ? appMain.querySelector('#search-tags') : null;
