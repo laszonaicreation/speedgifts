@@ -835,12 +835,23 @@
                                 <input type="text" id="p-material" class="admin-input" placeholder="Material">
                             </div>
 
-                            <label
-                                class="flex items-center gap-3 bg-white p-4 rounded-xl border border-gray-100 cursor-pointer">
-                                <input type="checkbox" id="p-stock" class="w-4 h-4 accent-black" checked>
-                                <span class="text-[11px] font-bold uppercase tracking-widest text-gray-500">Available in
-                                    Stock</span>
-                            </label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <label
+                                    class="flex items-center gap-3 bg-white p-4 rounded-xl border border-gray-100 cursor-pointer">
+                                    <input type="checkbox" id="p-stock" class="w-4 h-4 accent-black" checked>
+                                    <span
+                                        class="text-[11px] font-bold uppercase tracking-widest text-gray-500">Available
+                                        in
+                                        Stock</span>
+                                </label>
+                                <label
+                                    class="flex items-center gap-3 bg-white p-4 rounded-xl border border-gray-100 cursor-pointer">
+                                    <input type="checkbox" id="p-pinned" class="w-4 h-4 accent-black">
+                                    <span class="text-[11px] font-bold uppercase tracking-widest text-gray-500">Pin to
+                                        Top
+                                        (Always First)</span>
+                                </label>
+                            </div>
 
                             <div class="bg-white/60 p-4 rounded-xl border border-gray-100 space-y-4">
                                 <input type="text" id="p-img"
@@ -1269,13 +1280,19 @@
                     });
                 }
 
-                if (state.sort !== 'all') {
-                    filtered.sort((a, b) => {
+                // Sort: Pinned items first, then by selected sort
+                filtered.sort((a, b) => {
+                    const pinA = a.isPinned ? 1 : 0;
+                    const pinB = b.isPinned ? 1 : 0;
+                    if (pinA !== pinB) return pinB - pinA; // Pinned first
+
+                    if (state.sort !== 'all') {
                         const priceA = parseFloat(a.price) || 0;
                         const priceB = parseFloat(b.price) || 0;
                         return state.sort === 'low' ? priceA - priceB : priceB - priceA;
-                    });
-                }
+                    }
+                    return 0;
+                });
                 let catNameDisplay = "All Collections";
                 if (state.selectionId) catNameDisplay = "Shared Selection";
                 else if (state.filter === 'wishlist') catNameDisplay = "Favorites List";
@@ -1417,6 +1434,7 @@
                 catId: document.getElementById('p-cat-id')?.value,
                 desc: document.getElementById('p-desc')?.value,
                 keywords: document.getElementById('p-keywords')?.value,
+                isPinned: document.getElementById('p-pinned')?.checked || false,
                 updatedAt: Date.now()
             };
             if (!data.name || !data.img) return showToast("Required info missing");
@@ -1447,6 +1465,7 @@
             const pSize = document.getElementById('p-size');
             const pMaterial = document.getElementById('p-material');
             const pStock = document.getElementById('p-stock');
+            const pPinned = document.getElementById('p-pinned');
             const pImg = document.getElementById('p-img');
             const pImg2 = document.getElementById('p-img2');
             const pImg3 = document.getElementById('p-img3');
@@ -1461,7 +1480,8 @@
             if (pSize) pSize.value = item.size || "";
             if (pMaterial) pMaterial.value = item.material || "";
             if (pStock) pStock.checked = item.inStock !== false;
-            if (pImg) pImg.value = item.img;
+            if (pPinned) pPinned.checked = item.isPinned || false;
+            if (pImg) pImg.value = item.img || "img/";
             if (pImg2) pImg2.value = item.img2 || "img/";
             if (pImg3) pImg3.value = item.img3 || "img/";
             if (pCatId) pCatId.value = item.catId;
@@ -1694,7 +1714,8 @@
                 pHtml += `<div class="admin-list-category-header"><h5 class="text-[10px] font-black uppercase tracking-widest text-gray-400">${cat} (${grouped[cat].length})</h5></div>`;
                 grouped[cat].forEach(p => {
                     const stockTag = p.inStock !== false ? '<span class="stock-badge in">In Stock</span>' : '<span class="stock-badge out">Out of Stock</span>';
-                    pHtml += `<div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group"><img src="${p.img}" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-white"><div class="flex-1"><h4 class="font-bold text-[12px] capitalize truncate">${p.name}</h4><p class="text-[9px] text-gray-400 font-bold">${p.price} AED</p>${stockTag}</div><div class="flex gap-2"><button onclick="editProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-md text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[9px]"></i></button><button onclick="deleteProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[9px]"></i></button></div></div>`;
+                    const pinIcon = p.isPinned ? '<i class="fa-solid fa-thumbtack text-[9px] text-blue-500 ml-1"></i>' : '';
+                    pHtml += `<div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 group"><img src="${p.img}" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-white"><div class="flex-1"><h4 class="font-bold text-[12px] capitalize truncate flex items-center">${p.name}${pinIcon}</h4><p class="text-[9px] text-gray-400 font-bold">${p.price} AED</p>${stockTag}</div><div class="flex gap-2"><button onclick="editProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-md text-gray-400 hover:text-black transition-all"><i class="fa-solid fa-pen text-[9px]"></i></button><button onclick="deleteProduct('${p.id}')" class="w-8 h-8 flex items-center justify-center bg-red-50 rounded-full text-red-200 hover:text-red-500 transition-all"><i class="fa-solid fa-trash text-[9px]"></i></button></div></div>`;
                 });
             });
             pList.innerHTML = pHtml || `<p class="text-center py-20 text-[11px] text-gray-300 italic">No products found matching filters.</p>`;
@@ -1783,6 +1804,7 @@
             document.getElementById('p-img').value = "img/"; document.getElementById('p-img2').value = "img/"; document.getElementById('p-img3').value = "img/";
             document.getElementById('c-img').value = "img/";
             document.getElementById('p-stock').checked = true;
+            document.getElementById('p-pinned').checked = false;
             document.getElementById('p-form-title').innerText = "Product Details";
             document.getElementById('c-form-title').innerText = "New Category";
             if (document.getElementById('admin-search')) document.getElementById('admin-search').value = "";
