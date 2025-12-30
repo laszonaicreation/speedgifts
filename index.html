@@ -266,7 +266,31 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 1.2s ease;
+            transition: transform 1.2s ease, opacity 0.5s ease;
+            opacity: 0;
+        }
+
+        .img-container img[src] {
+            opacity: 1;
+        }
+
+        /* Smoothing image entry */
+        img {
+            transition: opacity 0.5s ease;
+        }
+
+        img:not([src]),
+        img[src=""] {
+            opacity: 0;
+        }
+
+        .product-card img {
+            opacity: 0;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-card img.loaded {
+            opacity: 1;
         }
 
         /* NEW USABILITY ENHANCEMENTS */
@@ -1221,10 +1245,16 @@
                 const loader = document.getElementById('loader');
                 if (loader) {
                     const safetyTimer = setTimeout(() => { loader.style.display = 'none'; }, 5000);
-                    // Preload Icons
+                    // Preload Icons & Top Products
                     const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/');
-                    if (iconsToLoad.length > 0) {
-                        await Promise.all(iconsToLoad.map(url => new Promise((resolve) => {
+                    // Sort items by pinned first to get the most important ones for preloading
+                    const topProds = [...DATA.p].sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0)).slice(0, 6);
+                    const prodsToLoad = topProds.map(p => p.img).filter(u => u && u !== 'img/');
+
+                    const allToPreload = [...new Set([...iconsToLoad, ...prodsToLoad])];
+
+                    if (allToPreload.length > 0) {
+                        await Promise.all(allToPreload.map(url => new Promise((resolve) => {
                             const img = new Image(); img.src = url;
                             img.onload = resolve; img.onerror = resolve;
                             setTimeout(resolve, 2000);
@@ -1431,7 +1461,12 @@
                         <div class="product-card group fade-in ${state.selected.includes(p.id) ? 'selected' : ''} ${state.wishlist.includes(p.id) ? 'wish-active' : ''}" onclick="viewDetail('${p.id}')">
                             <div class="wish-btn shadow-sm" onclick="toggleWishlist(event, '${p.id}')"><i class="fa-solid fa-heart text-[10px]"></i></div>
                             ${!state.selectionId && !state.filter.includes('wishlist') ? `<div class="select-btn shadow-sm" onclick="toggleSelect(event, '${p.id}')"><i class="fa-solid fa-check text-[10px]"></i></div>` : ''}
-                            <div class="img-container mb-4 shadow-sm"><img src="${p.img}" ${idx > 8 ? 'loading="lazy"' : ''}></div>
+                            <div class="img-container mb-4 shadow-sm">
+                                <img src="${p.img}" 
+                                     ${idx < 4 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'}
+                                     onload="this.classList.add('loaded')"
+                                     alt="${p.name}">
+                            </div>
                             <div class="px-1 text-left">
                                 <h3 class="capitalize truncate leading-none text-gray-900 font-semibold">${p.name}</h3>
                                 <p class="price-tag mt-2 font-bold">${p.price} AED</p>
@@ -1490,7 +1525,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
                         <div>
                             <div class="zoom-img-container aspect-square" onmousemove="handleZoom(event, this)" onmouseleave="resetZoom(this)" onclick="openFullScreen('${p.img}')">
-                                <img src="${p.img}" id="main-detail-img" class="w-full h-full object-cover">
+                                <img src="${p.img}" id="main-detail-img" class="w-full h-full object-cover" fetchpriority="high" loading="eager">
                             </div>
                             <div class="thumb-grid justify-center lg:justify-start">
                                 <div class="thumb-box active" onclick="switchImg('${p.img}', this)"><img src="${p.img}"></div>
