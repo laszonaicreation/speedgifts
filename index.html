@@ -1246,18 +1246,28 @@
                 if (loader) {
                     const safetyTimer = setTimeout(() => { loader.style.display = 'none'; }, 5000);
                     // Preload Icons & Top Products
-                    const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/');
-                    // Sort items by pinned first to get the most important ones for preloading
-                    const topProds = [...DATA.p].sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0)).slice(0, 6);
-                    const prodsToLoad = topProds.map(p => p.img).filter(u => u && u !== 'img/');
+                    // Priority 1: Top 6 products (Visible on load)
+                    const topItems = [...DATA.p].sort((a, b) => {
+                        const pinA = a.isPinned ? 1 : 0;
+                        const pinB = b.isPinned ? 1 : 0;
+                        if (pinA !== pinB) return pinB - pinA;
+                        return (b.updatedAt || 0) - (a.updatedAt || 0); // Newest first
+                    }).slice(0, 6);
 
-                    const allToPreload = [...new Set([...iconsToLoad, ...prodsToLoad])];
+                    const prodsToLoad = topItems.map(p => p.img).filter(u => u && u !== 'img/');
+                    // Priority 2: Category icons (Necessary for navigation)
+                    const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/').slice(0, 8);
+
+                    const allToPreload = [...new Set([...prodsToLoad, ...iconsToLoad])];
 
                     if (allToPreload.length > 0) {
+                        // High priority preloading for the top products
                         await Promise.all(allToPreload.map(url => new Promise((resolve) => {
-                            const img = new Image(); img.src = url;
-                            img.onload = resolve; img.onerror = resolve;
-                            setTimeout(resolve, 2000);
+                            const img = new Image();
+                            img.src = url;
+                            img.onload = resolve;
+                            img.onerror = resolve;
+                            setTimeout(resolve, 1500); // Shorter timeout to avoid blocking UI
                         })));
                     }
                     clearTimeout(safetyTimer);
@@ -1439,7 +1449,7 @@
                         const priceB = parseFloat(b.price) || 0;
                         return state.sort === 'low' ? priceA - priceB : priceB - priceA;
                     }
-                    return 0;
+                    return (b.updatedAt || 0) - (a.updatedAt || 0); // Default sort: Newest first
                 });
                 let catNameDisplay = "All Collections";
                 if (state.selectionId) catNameDisplay = "Shared Selection";
@@ -1463,7 +1473,7 @@
                             ${!state.selectionId && !state.filter.includes('wishlist') ? `<div class="select-btn shadow-sm" onclick="toggleSelect(event, '${p.id}')"><i class="fa-solid fa-check text-[10px]"></i></div>` : ''}
                             <div class="img-container mb-4 shadow-sm">
                                 <img src="${p.img}" 
-                                     ${idx < 4 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'}
+                                     ${idx < 6 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'}
                                      onload="this.classList.add('loaded')"
                                      alt="${p.name}">
                             </div>
