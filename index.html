@@ -270,9 +270,7 @@
             opacity: 0;
         }
 
-        .img-container img[src] {
-            opacity: 1;
-        }
+        /* Removed: .img-container img[src] { opacity: 1; } to ensure fade-in only happens on .loaded */
 
         /* Smoothing image entry */
         img {
@@ -1245,19 +1243,27 @@
                 const loader = document.getElementById('loader');
                 if (loader) {
                     const safetyTimer = setTimeout(() => { loader.style.display = 'none'; }, 5000);
-                    // Preload Icons & Top Products
-                    // Priority 1: Top 6 products (Visible on load)
-                    const topItems = [...DATA.p].sort((a, b) => {
+
+                    // Priority 1: Category icons (Necessary for navigation)
+                    const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/').slice(0, 10);
+
+                    // Priority 2: Top products for current state (Accounting for current filters)
+                    const stockFilter = (items) => items.filter(p => p.inStock !== false);
+                    let filteredForPreload = [];
+                    if (state.selectionId) filteredForPreload = DATA.p.filter(p => state.selected.includes(p.id));
+                    else if (state.filter === 'wishlist') filteredForPreload = DATA.p.filter(p => state.wishlist.includes(p.id));
+                    else if (state.filter !== 'all') filteredForPreload = stockFilter(DATA.p.filter(p => p.catId === state.filter));
+                    else filteredForPreload = stockFilter(DATA.p);
+
+                    // Sort matching renderHome
+                    filteredForPreload.sort((a, b) => {
                         const pinA = a.isPinned ? 1 : 0;
                         const pinB = b.isPinned ? 1 : 0;
                         if (pinA !== pinB) return pinB - pinA;
-                        return (b.updatedAt || 0) - (a.updatedAt || 0); // Newest first
-                    }).slice(0, 6);
+                        return (b.updatedAt || 0) - (a.updatedAt || 0);
+                    });
 
-                    const prodsToLoad = topItems.map(p => p.img).filter(u => u && u !== 'img/');
-                    // Priority 2: Category icons (Necessary for navigation)
-                    const iconsToLoad = DATA.c.map(c => c.img).filter(u => u && u !== 'img/').slice(0, 8);
-
+                    const prodsToLoad = filteredForPreload.slice(0, 8).map(p => p.img).filter(u => u && u !== 'img/');
                     const allToPreload = [...new Set([...prodsToLoad, ...iconsToLoad])];
 
                     if (allToPreload.length > 0) {
@@ -1473,7 +1479,8 @@
                             ${!state.selectionId && !state.filter.includes('wishlist') ? `<div class="select-btn shadow-sm" onclick="toggleSelect(event, '${p.id}')"><i class="fa-solid fa-check text-[10px]"></i></div>` : ''}
                             <div class="img-container mb-4 shadow-sm">
                                 <img src="${p.img}" 
-                                     ${idx < 6 ? 'fetchpriority="high" loading="eager"' : 'loading="lazy"'}
+                                     ${idx < 8 ? 'fetchpriority="high" loading="eager"' : 'fetchpriority="low" loading="lazy"'}
+                                     decoding="async"
                                      onload="this.classList.add('loaded')"
                                      alt="${p.name}">
                             </div>
