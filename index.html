@@ -625,6 +625,31 @@
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
         }
 
+        .close-preview-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 10001;
+            transition: all 0.3s ease;
+        }
+
+        .close-preview-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
         /* REVERTED ADMIN INPUTS */
         .admin-input {
             width: 100%;
@@ -736,7 +761,9 @@
 
     <!-- FULL SCREEN PREVIEW OVERLAY -->
     <div id="img-full-preview" onclick="closeFullScreen()">
-        <div class="close-preview-btn">✕</div>
+        <div class="close-preview-btn">
+            <i class="fa-solid fa-xmark"></i>
+        </div>
         <img id="full-preview-img" src="" alt="Premium Preview">
     </div>
 
