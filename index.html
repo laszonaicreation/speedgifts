@@ -1716,13 +1716,19 @@
         };
 
         // NEW: UNIVERSAL MIGRATION LOGIC (FOR FUTURE DB SWITCHING)
-        window.copyUniversalJSON = () => {
+        window.copyUniversalJSON = async () => {
             try {
+                if (!DATA || !DATA.p || DATA.p.length === 0) {
+                    showToast("Loading data... please wait");
+                    await refreshData();
+                }
+
                 const universalBackup = {
                     metadata: {
                         source: "Speed Gifts Boutique UI",
-                        version: "2.5.0",
+                        version: "2.6.0",
                         exportDate: new Date().toISOString(),
+                        productCount: DATA.p.length,
                         schema: {
                             products: ["id", "name", "price", "catId", "stockStatus", "size", "material", "description", "images"]
                         }
@@ -1736,20 +1742,29 @@
                         stockStatus: p.inStock !== false ? "instock" : "outofstock",
                         specs: { size: p.size || "", material: p.material || "" },
                         description: p.desc || "",
-                        images: [p.img, p.img2, p.img3].filter(u => u && u !== 'img/')
+                        images: [p.img, p.img2, p.img3].filter(u => u && u !== 'img/' && u.length > 4),
+                        isPinned: p.isPinned || false
                     }))
                 };
 
                 const jsonStr = JSON.stringify(universalBackup, null, 2);
-                const textArea = document.createElement("textarea");
-                if (!textArea) return;
-                textArea.value = jsonStr;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showToast("Universal Migration JSON Copied!");
-            } catch (err) { showToast("Migration Prep Failed"); }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(jsonStr);
+                } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = jsonStr;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+
+                showToast(`Universal Schema Copied! (${DATA.p.length} items)`);
+            } catch (err) {
+                console.error(err);
+                showToast("Migration Prep Failed");
+            }
         };
 
         window.importData = (event) => {
@@ -1759,12 +1774,70 @@
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    const data = JSON.parse(e.target.result);
+                    const rawData = JSON.parse(e.target.result);
                     showToast("Restoring... Please Wait");
-                    if (data.categories) { for (const cat of data.categories) { const { id, ...cleanCat } = cat; await addDoc(catCol, cleanCat); } }
-                    if (data.products) { for (const prod of data.products) { const { id, ...cleanProd } = prod; await addDoc(prodCol, cleanProd); } }
-                    showToast("Restore Successful!"); refreshData();
-                } catch (err) { showToast("Import Failed"); }
+
+                    // 1. Identify Format & Prepare Data
+                    let categories = [];
+                    let products = [];
+                    const isUniversal = rawData.metadata && rawData.metadata.source === "Speed Gifts Boutique UI";
+
+                    if (isUniversal) {
+                        categories = rawData.categories || [];
+                        products = rawData.products || [];
+                    } else {
+                        categories = rawData.categories || [];
+                        products = rawData.products || [];
+                    }
+
+                    // 2. Map Categories and Store ID relations
+                    const catMap = {}; // oldId -> newId
+                    if (categories.length > 0) {
+                        for (const cat of categories) {
+                            const oldId = cat.id;
+                            const cleanCat = {
+                                name: cat.name,
+                                img: isUniversal ? cat.iconUrl : cat.img
+                            };
+                            const docRef = await addDoc(catCol, cleanCat);
+                            catMap[oldId] = docRef.id;
+                        }
+                    }
+
+                    // 3. Import Products with mapped Category IDs
+                    if (products.length > 0) {
+                        for (const prod of products) {
+                            let cleanProd = {};
+                            if (isUniversal) {
+                                cleanProd = {
+                                    name: prod.name,
+                                    price: prod.price,
+                                    catId: catMap[prod.catId] || "uncategorized",
+                                    inStock: prod.stockStatus === "instock",
+                                    size: prod.specs?.size || "",
+                                    material: prod.specs?.material || "",
+                                    desc: prod.description || "",
+                                    img: prod.images?.[0] || "img/",
+                                    img2: prod.images?.[1] || "img/",
+                                    img3: prod.images?.[2] || "img/",
+                                    isPinned: prod.isPinned || false,
+                                    updatedAt: Date.now()
+                                };
+                            } else {
+                                const { id, ...rest } = prod;
+                                cleanProd = { ...rest, catId: catMap[prod.catId] || prod.catId, updatedAt: Date.now() };
+                            }
+                            await addDoc(prodCol, cleanProd);
+                        }
+                    }
+
+                    showToast("Restore Successful!");
+                    DATA.p = [];
+                    refreshData();
+                } catch (err) {
+                    console.error(err);
+                    showToast("Import Failed");
+                }
             };
             reader.readAsText(file);
         };
